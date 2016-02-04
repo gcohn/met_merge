@@ -1,0 +1,195 @@
+'CR1000 Series Datalogger
+'Program name: VARA_302_V15.CR1
+'
+'Version 11 Created on 7-15-15 FOR UPGRADE FROM CR10X DATALOGGER TO CR1000
+'Version 12 Created on 11-17-2015: Added Cardout(), added NL116 with 4GB CF card. AK             
+'Version 13 Created on 11-19-2015: Removed Cardout() - this command retired for >4GB cards
+          ' Removed TableFile call to USB
+          ' Added TableFile call to CRD
+          ' TOB3 file format on CRD card for speedy writing
+'Version 14 Created 1/14/2016 for upgrade to tablefile() to CRD
+          ' Added "_" after _105 in "CRD:VARA_302_Table105" so CardOut is able to sort
+          ' individual TOB3 files correctly.  
+'Version 15 Created on 1/20/16
+		  ' Modifications to heater pump subroutine (for standalone raing gauge)
+		  ' 	1. removed FLAG array variable
+		  '		2. Added CONT_*, OR_*, and PUMP_ON variables to public table
+		  '     3. Removed hard coded pump shut off values
+		  '		4. Assigned CONT_* variables default shut off values to be altered at the terminal
+		  '		5. Altered pump control logic
+		  '	Added CONT data table to monitor pump and pump control function
+		  ' Added PROG_VERS variable to public table (output to CONT data table)
+'          
+'Declare Constant Variable
+Const LID              = 302
+Const INITIAL_DISTANCE = 5.60
+
+'Declare Public Variables
+Public LOGGERID
+Public PROGID As Long
+Public PRECIP
+Public PUMPVOLTS
+Public AIR_450
+Public SWE
+Public SR50(2)
+Public TEMP_CORR_DISTANCE
+Public SNOWDEPTH
+Public BATTERY_V
+Public OR_PRECIP
+Public OR_TEMP
+Public OR_RUN_TIME
+Public OR_OFF_TIME
+Public CON_TEMP = 4
+Public CON_TIME_OFF = 900
+Public CON_TIME_ON = 1209600
+Public CON_TIME
+Public CON_PUMP
+Public PUMP_ON
+Public PROG_VERS=15
+Public SNOW_TARE = 10
+
+'Alias
+Alias SR50(1)= RAW_DIST
+Alias SR50(2)= QUALITY
+
+'Declare Public Units
+Units LOGGERID        = number
+Units PROGID          = number
+Units PRECIP          = millimeter
+Units SWE             = millimeter
+Units OR_TEMP         = deg c
+Units PUMPVOLTS       = volts
+Units SNOWDEPTH       = meter
+Units AIR_450         = deg c
+Units BATTERY_V       = volts
+Units SNOW_TARE       = number
+Units CON_TEMP        = number
+
+'\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
+
+'5 MINUTE OUTPUT
+DataTable(Table105,true,-1)
+  TableFile("CRD:VARA_302_Table105_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PRECIP,FP2)
+  Sample (1,SWE,FP2)
+  Sample (1,SNOWDEPTH,FP2)
+  Sample (1,QUALITY,FP2)
+  Average (1,PUMPVOLTS,FP2,0)
+  Average (1,OR_TEMP,FP2,0)
+  Average (1,AIR_450,FP2,0)
+  Average (1,BATTERY_V,FP2,0)
+  Maximum (1,AIR_450,FP2,False,False)
+  Minimum (1,AIR_450,FP2,False,False)
+ 
+EndTable
+
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,true,-1)
+  TableFile("CRD:VARA_302_CONT_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Average (1,OR_TEMP,FP2,0)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,OR_RUN_TIME,Long)
+  Sample (1,OR_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+  Average (1,BATTERY_V,FP2,0)  
+EndTable
+'
+'Main Program
+BeginProg
+  Timer(2,Sec,2)
+  Scan (15,Sec,0,0)
+    '\\\\\\\\\\\\\\\\\\\\\\\\ Sub Routines ////////////////////////
+    'PUMP CONTROL
+    '
+    ' Take action
+    PortGet(PUMP_ON,8)
+    If (CON_PUMP = true AND PUMP_ON = 0 ) Then
+      PortSet(8,1)
+      Timer(1,Sec,2)
+      Timer(2,Sec,3)
+    EndIf
+    If (CON_PUMP = false AND PUMP_ON = 1) Then
+      PortSet(8,0)
+      Timer(1,Sec,3)
+      Timer(2,Sec,2)
+    EndIf
+    '
+    ' CHECK ORIFIC TEMPERATURE 
+    ' pump on at low temp
+    If (OR_TEMP < CON_TEMP) Then                      
+      CON_PUMP = true
+    EndIf
+    ' pump off at high temp
+    If (CON_TEMP+1 <= OR_TEMP) Then
+      CON_PUMP = false
+    EndIf
+    'CHECK TIME
+    OR_OFF_TIME = Timer(2,sec,4)
+    If (OR_OFF_TIME > CON_TIME_ON) Then
+      CON_TIME = false
+    EndIf
+    OR_RUN_TIME = Timer(1,Sec,4)
+    If (OR_RUN_TIME > CON_TIME_OFF OR CON_TIME = true) Then
+      CON_PUMP = false
+      CON_TIME = true
+    EndIf
+    
+  
+    '
+    'MEASURE STAND ALONE RAIN GAGE FLOAT
+    VoltDiff (PRECIP,1,mV250,1,True,0,_60Hz,3.7160,-184.31)
+    '
+    'MEASURE ORIFICE TEMP
+    Therm107 (OR_TEMP,1,3,Vx1,0,_60Hz,1.0,0)
+    '
+    'MEASURE 4.5M AIR TEMP
+    Therm107 (AIR_450,1,4,Vx2,0,_60Hz,1.0,0)
+    '
+    'MEASURE PUMPVOLTS
+    VoltDiff (PUMPVOLTS,1,mV2500,3,True,0,_60Hz,0.01,0)
+    '
+    'MEASURE SNOW PILLOW
+    BrFull (SWE,1,mV25,4,Vx3,1,1524,True,True,0,_60Hz,718.76, 0)    
+    '
+    'MEASURE SR50A SNOW DEPTH SENSOR
+    SDI12Recorder (SR50(),1,0,"M1!",1.0,0)
+    '
+    'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+    '
+    'PROCESS DATA   
+    '
+    'CORRECT SNOW DEPTH MEASUREMENT
+    TEMP_CORR_DISTANCE=RAW_DIST*(SQR((AIR_450+273.15)/273.15))
+    SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    '
+    'SUBTRACT TARE FOR SNOW PILLOW
+    SWE = SWE - SNOW_TARE
+    '
+    'OUTPUT DATA
+    '
+    'SET LOGGERID TO 302
+    LOGGERID = LID
+    '
+    'RECORD THE SIGNATURE AS PROGID
+    If TimeIntoInterval(0,1,Min) Then
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+    '
+    '5 MINUTE OUTPUT
+    CallTable Table105
+	CallTable CONT
+  NextScan
+EndProg
+
