@@ -12,6 +12,8 @@
 'Version 3 Created on 1/14/2016 by AK
 '  Changed TableFile("CRD:UPLO_236_Table105",64,-1,0,1,Day,0,0) to 
 '  TableFile("CRD:UPLO_236_Table105_",64,-1,0,1,Day,0,0)
+'Version 4 created on 2/3/16 by GC
+'  added SYS table output to card to track system function separate from climate data
 '
 'Declare Constant Variable
 Const LID              = 236
