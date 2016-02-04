@@ -11,6 +11,15 @@
 'Version 3 created on 1/14/2016
     ' Changed TableFile("CRD:UPLO_235_Table105",64,-1,0,1,Day,0,0)  to
     ' TableFile("CRD:UPLO_235_Table105_",64,-1,0,1,Day,0,0) 
+' Version 4 created on 2/3/2016
+  ' Modifications to heater pump subroutine (for standalone raing gauge)
+	  ' 	1. removed FLAG array variable
+		'		2. Added CONT_*, SA_*, and PUMP_ON variables to public table
+		'     3. Removed hard coded pump shut off values
+		'		4. Assigned CONT_* variables default shut off values to be altered at the terminal
+		'		5. Altered pump control logic
+		'	Added CONT data table to monitor pump and pump control function
+		' Added PROG_VERS variable to public table (output to CONT data table)
 
 Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
@@ -31,9 +40,15 @@ Public WIND_DIR
 Public BATTERY_V
 Public SA_PRECIP
 Public SA_TEMP
-Public FLAG(1)
-Public RUN_TIME
+Public SA_RUN_TIME
+Public SA_OFF_TIME
 Public CON_TEMP = 4
+Public CON_TIME_OFF = 900
+Public CON_TIME_ON = 1209600
+Public CON_TIME
+Public CON_PUMP
+Public PUMP_ON
+Public PROG_VERS=4
 Public WCRPA(4)
 Public sncstring As String * 60
 Public sncstring_bytes
@@ -98,7 +113,6 @@ Units WIND_DIR        = degrees
 Units BATTERY_V       = volts
 Units SA_PRECIP       = millimeter
 Units SA_TEMP         = deg C
-Units RUN_TIME        = number
 Units CON_TEMP        = number
 Units Ux              = [m s-1]
 Units Uy              = [m s-1]
@@ -174,6 +188,25 @@ DataTable(Table105,true,-1)
   FieldNames ("SPD_Gust_max")  
   
 EndTable
+
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,true,-1)
+  TableFile("CRD:UPLO_235_CONT_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Average (1,SA_TEMP,FP2,0)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+  Average (1,BATTERY_V,FP2,0)  
+EndTable
 '
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 '
@@ -224,29 +257,42 @@ BeginProg
   NextScan
 
   SlowSequence
-  Scan(SCAN_INTERVAL_SLOW,Sec, 0, 0)    
-    '
+  Scan(SCAN_INTERVAL_SLOW,Sec, 0, 0)        
     'PUMP CONTROL
     '
-    'If FLAG(1) false procede, if true stop.
-    If FLAG(1) = false Then
-      'If Raingage orifice temp < 4C, turn pump on, start timer.
-      If (SA_TEMP < CON_TEMP) Then                      
-        PortSet(8,1)
-        RUN_TIME = Timer(1,Sec,0)
-      EndIf
-      'If SAR Orifice temp >= 4C, turn pump off, stop and reset timer.
-      If (SA_TEMP >= CON_TEMP) Then
-        PortSet(8,0)
-        RUN_TIME = Timer(1,Sec,3)
-      EndIf
-     'If RUN_TIME >= 900 seconds, turn pump off, set FLAG(1) true, stop and reset timer.
-      If (RUN_TIME >= 900) Then       
-        PortSet(8,0)
-        FLAG(1) = true
-        RUN_TIME = Timer(1,Sec,3)
-      EndIf
+    ' CHECK ORIFIC TEMPERATURE 
+    ' pump on at low temp
+    If (SA_TEMP < CON_TEMP) Then                      
+      CON_PUMP = true
     EndIf
+    ' pump off at high temp
+    If (CON_TEMP+1 <= SA_TEMP) Then
+      CON_PUMP = false
+    EndIf
+    'CHECK TIME
+    SA_OFF_TIME = Timer(2,sec,4)
+    If (SA_OFF_TIME > CON_TIME_ON) Then
+      CON_TIME = false
+    EndIf
+    SA_RUN_TIME = Timer(1,Sec,4)
+    If (SA_RUN_TIME > CON_TIME_OFF OR CON_TIME = true) Then
+      CON_PUMP = false
+      CON_TIME = true
+    EndIf
+    '
+    ' Take action
+    PortGet(PUMP_ON,8)
+    If (CON_PUMP = true AND PUMP_ON = 0 ) Then
+      PortSet(8,1)
+      Timer(1,Sec,2)
+      Timer(2,Sec,3)
+    EndIf
+    If (CON_PUMP = false AND PUMP_ON = 1) Then
+      PortSet(8,0)
+      Timer(1,Sec,3)
+      Timer(2,Sec,2)
+    EndIf
+    '
     '
     'MEASURE 1.5M & 4.5M HMP45C'S
     PortSet(5,1)
@@ -318,5 +364,6 @@ BeginProg
     '
     '5 MINUTE OUTPUT
     CallTable Table105
+    CallTable CONT
   NextScan
 EndProg
