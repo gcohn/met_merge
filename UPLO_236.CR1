@@ -33,6 +33,8 @@ Public SNOWDEPTH
 Public SOLAR_Wm2
 Public BP_mb
 Public BATTERY_V
+Public PROG_VERS = 4
+Public SR50_CORRECTION
 
 'Alias
 Alias SR50(1)  = RAW_DIST
@@ -75,6 +77,18 @@ DataTable(Table105,true,-1)
   Maximum (1,SOLAR_Wm2,FP2,False,0)
   
 EndTable
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:UPLO_236_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Average(1,AIR_TEMP,FP2,0)
+  Average(1,SR50_CORRECTION,FP2,0)
+EndTable
+  
+  
 '
 'Main Program
 BeginProg
@@ -143,6 +157,7 @@ BeginProg
     '
     '5 MINUTE OUTPUT
     CallTable Table105
+    CallTable SYS
   NextScan
 EndProg
 
