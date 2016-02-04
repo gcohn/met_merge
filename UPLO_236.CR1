@@ -1,0 +1,148 @@
+'CR1000 Series Datalogger
+'Program name: UPLO_236_V02.CR1
+'
+'Version 1 Created on 9-15-15 by JM
+'
+'Version 2 Modified on 11-23-15 by JM,SW & AK
+'  Changed control port for snowdepth sensor from 3 to 1.  Removed MJ 
+'Modified 11/23/2015, AK
+    '  Removed CardOut() - this command expired for CF cards over 4GB
+    '  Added TableFile() command to save data in TOB3 format on CRD.
+    '  Removed TableFile() to USB becuase only one TableFile() call permitted per table.
+'Version 3 Created on 1/14/2016 by AK
+'  Changed TableFile("CRD:UPLO_236_Table105",64,-1,0,1,Day,0,0) to 
+'  TableFile("CRD:UPLO_236_Table105_",64,-1,0,1,Day,0,0)
+'
+'Declare Constant Variable
+Const LID              = 236
+Const INITIAL_DISTANCE = 5.6
+
+'Declare Public Variables
+Public LOGGERID
+Public PROGID As Long
+Public SH_PRECIP
+Public SH_TEMP
+Public CS451(2)
+Public SNOW_TARE
+Public TIPPING_B
+Public TOTAL_TIPS
+Public SR50(2)
+Public TEMP_CORR_DISTANCE
+Public AIR_TEMP
+Public SNOWDEPTH
+Public SOLAR_Wm2
+Public BP_mb
+Public BATTERY_V
+
+'Alias
+Alias SR50(1)  = RAW_DIST
+Alias SR50(2)  = QUALITY
+Alias CS451(1) = SWE
+Alias CS451(2) = TEMP_C
+
+'Declare Public Units
+Units LOGGERID        = number
+Units PROGID          = number
+Units SH_PRECIP       = millimeter
+Units SH_TEMP         = deg c
+Units SWE             = millimeter
+Units TIPPING_B       = tips
+Units TOTAL_TIPS      = tips
+Units SNOWDEPTH       = meter
+Units AIR_TEMP        = deg C
+Units BATTERY_V       = volts
+Units SOLAR_Wm2       = w m-2
+Units SNOW_TARE       = number
+Units BP_mb           = mb
+
+'\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
+
+'5 MINUTE OUTPUT
+DataTable(Table105,true,-1)
+  TableFile("CRD:UPLO_236_Table105_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,SH_PRECIP,FP2)
+  Sample (1,SWE,FP2)
+  Sample (1,SNOWDEPTH,FP2)
+  Sample (1,QUALITY,FP2)
+  Sample (1,BP_mb,IEEE4)
+  Totalize (1,TIPPING_B,FP2,0)
+  Average (1,SH_TEMP,FP2,0)
+  Average (1,SOLAR_Wm2,FP2,0)
+  Average (1,BATTERY_V,FP2,0) 
+  Maximum (1,SOLAR_Wm2,FP2,False,0)
+  
+EndTable
+'
+'Main Program
+BeginProg
+  Scan (15,Sec,0,0)
+    '   
+    'MEASURE SHELTER RAIN GAGE FLOAT
+    VoltDiff (SH_PRECIP,1,mV250,1,True,0,_60Hz,4.7880,-237.48)
+    '
+    'MEASURE PYRANOMETER
+    VoltDiff (SOLAR_Wm2,1,mV25,2,True,0,_60Hz,91.6758,0)
+    '
+    'MEASURE SHELTER RAINGAGE ORIFICE TEMP
+    Therm107 (SH_TEMP,1,5,Vx2,0,_60Hz,1.0,0)
+    '
+    'MEASURE AIR TEMP
+    Therm107 (AIR_TEMP,1,6,Vx2,0,_60Hz,1.0,0)
+    '
+    'MEASURE SNOW PILLOW
+    SDI12Recorder(CS451,7,"0","M!",1,0)
+    '
+    'MEASURE TIPPING BUCKET LYSIMETER
+    PulseCount (TIPPING_B,1,1,2,0,1.0,0)
+    '
+    'MEASURE SR50A SNOW DEPTH SENSOR
+    SDI12Recorder (SR50(),1,0,"M1!",1.0,0)
+    '
+    'MEASURE BAROMETRIC PRESSURE EVERY 5 MINUTES AND CORRECT TO SEA LEVEL
+    If TimeIntoInterval(4,5,Min) Then PortSet(5,1)    
+    If TimeIntoInterval(0,5,Min) Then
+      VoltSe(BP_mb,1,mV5000,9,False,0,_60Hz,0.24,646.100)
+      PortSet(5,0)
+    EndIf
+    '
+    'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+    '
+    'PROCESS DATA
+    '
+    'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
+    If (SOLAR_Wm2 < 0) Then
+      SOLAR_Wm2 = 0
+    EndIf
+    '
+    'CORRECT SNOW DEPTH MEASUREMENT
+    TEMP_CORR_DISTANCE=RAW_DIST*(SQR((AIR_TEMP+273.15)/273.15))
+    SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    '
+    'CHANGE SNOW PILLOW OUTPUT FROM PSIG TO mm H2O
+    SWE = SWE * 703.070
+    '
+    'SUBTRACT TARE FOR SNOW PILLOW
+    SWE = SWE - SNOW_TARE
+    '
+    'COMPUTE TOTAL TIPS
+    TOTAL_TIPS = TOTAL_TIPS + TIPPING_B
+    '
+    'OUTPUT DATA
+    '
+    'SET LOGGERID TO 234
+    LOGGERID = LID
+    '
+    'RECORD THE SIGNATURE AS PROGID
+    If TimeIntoInterval(0,1,Min) Then
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+    '
+    '5 MINUTE OUTPUT
+    CallTable Table105
+  NextScan
+EndProg
+
