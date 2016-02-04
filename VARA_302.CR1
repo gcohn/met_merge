@@ -112,19 +112,6 @@ BeginProg
     '\\\\\\\\\\\\\\\\\\\\\\\\ Sub Routines ////////////////////////
     'PUMP CONTROL
     '
-    ' Take action
-    PortGet(PUMP_ON,8)
-    If (CON_PUMP = true AND PUMP_ON = 0 ) Then
-      PortSet(8,1)
-      Timer(1,Sec,2)
-      Timer(2,Sec,3)
-    EndIf
-    If (CON_PUMP = false AND PUMP_ON = 1) Then
-      PortSet(8,0)
-      Timer(1,Sec,3)
-      Timer(2,Sec,2)
-    EndIf
-    '
     ' CHECK ORIFIC TEMPERATURE 
     ' pump on at low temp
     If (OR_TEMP < CON_TEMP) Then                      
@@ -144,7 +131,19 @@ BeginProg
       CON_PUMP = false
       CON_TIME = true
     EndIf
-    
+    ' Take action
+    PortGet(PUMP_ON,8)
+    If (CON_PUMP = true AND PUMP_ON = 0 ) Then
+      PortSet(8,1)
+      Timer(1,Sec,2)
+      Timer(2,Sec,3)
+    EndIf
+    If (CON_PUMP = false AND PUMP_ON = 1) Then
+      PortSet(8,0)
+      Timer(1,Sec,3)
+      Timer(2,Sec,2)
+    EndIf
+    '
   
     '
     'MEASURE STAND ALONE RAIN GAGE FLOAT
