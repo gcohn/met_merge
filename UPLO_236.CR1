@@ -9,9 +9,6 @@
     '  Removed CardOut() - this command expired for CF cards over 4GB
     '  Added TableFile() command to save data in TOB3 format on CRD.
     '  Removed TableFile() to USB becuase only one TableFile() call permitted per table.
-'Version 3 Created on 1/14/2016 by AK
-'  Changed TableFile("CRD:UPLO_236_Table105",64,-1,0,1,Day,0,0) to 
-'  TableFile("CRD:UPLO_236_Table105_",64,-1,0,1,Day,0,0)
 '
 'Declare Constant Variable
 Const LID              = 236
@@ -59,7 +56,7 @@ Units BP_mb           = mb
 
 '5 MINUTE OUTPUT
 DataTable(Table105,true,-1)
-  TableFile("CRD:UPLO_236_Table105_",64,-1,0,1,Day,0,0)
+  TableFile("CRD:UPLO_236_Table105",64,-1,0,1,Day,0,0)
   DataInterval(0,5,Min,10)
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
