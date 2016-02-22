@@ -19,6 +19,9 @@
 		  '		5. Altered pump control logic
 		  '	Added CONT data table to monitor pump and pump control function
 		  ' Added PROG_VERS variable to public table (output to CONT data table)
+'Version 16 Created on 2/21/16 by GC
+      ' Added SYS table to track non-data system variables
+      ' Tracks raw distances from snow depth sensor, and tare values for SWE sensor
 '          
 'Declare Constant Variable
 Const LID              = 302
