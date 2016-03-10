@@ -29,20 +29,18 @@ Public SR50(2)
 Public TEMP_CORR_DISTANCE
 Public AIR_TEMP
 Public SNOWDEPTH
-Public SA_TEMP
 Public SH_TEMP
 Public BATTERY_V
 Public PAR
 Public SOLAR_Wm2
 Public SOLAR_MJ
-Public CON_TEMP = 4
 Public SOLARMULT
 Public SNOW_TARE
-Public FLAG(1)
-Public RUN_TIME
+Public PROG_VERS=5
+
 
 'Alias
-Alias SR50(1)= RAW_DIST
+Alias SR50(1)= SNOW_RAW_DIST
 Alias SR50(2)= QUALITY
 
 'Declare Public Units
@@ -63,7 +61,26 @@ Units SOLAR_MJ        = MJ
 Units SOLARMULT       = number
 Units SNOW_TARE       = number
 Units CON_TEMP        = number
-Units RUN_TIME        = number
+
+'CONT Table variables
+Public SA_TEMP
+Public SA_RUN_TIME
+Public SA_OFF_TIME
+Public CON_TEMP = 4
+Public CON_TIME_OFF = 900
+Public CON_TIME_ON = 1209600
+Public CON_TIME
+Public CON_PUMP
+Public PUMP_ON
+
+'SYS Table variables
+Dim SNOW_DIST_CORRECTION
+Dim SWE_RAW
+Dim SNOW_INITIAL_DISTANCE
+
+Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
+Alias AIR_TEMP= SNOW_AIR_TEMP
+Alias SNOW_TARE = SWE_TARE
 
 '\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
 
@@ -87,31 +104,82 @@ DataTable(Table105,true,-1)
   Maximum (1,PAR,FP2,False,0)
   Maximum (1,SOLAR_Wm2,FP2,False,0)
 EndTable
+
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,true,-1)
+  TableFile("CRD:CENT_234_CONT_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Average (1,SA_TEMP,FP2,0)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+EndTable
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:CENT_234_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample (1,SNOW_INITIAL_DISTANCE,FP2)
+  Sample(1,SNOW_RAW_DIST,FP2)
+  Sample(1,SNOW_DIST_CORRECTION,FP2)
+  Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
+  Sample(1,SNOW_AIR_TEMP,FP2)
+  Sample(1,SWE_RAW,FP2)
+  Sample(1,SWE_TARE,FP2)
+  
+EndTable
 '
 'Main Program
 BeginProg
+  SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
+
+  Timer(2,Sec,2)
   Scan (15,Sec,0,0)
     '\\\\\\\\\\\\\\\\\\\\\\\\ Sub Routines ////////////////////////
-    'Pump Control
-    'If FLAG(1) false procede, if true stop.
-    If FLAG(1) = false Then
-      'If Raingage orifice temp < 4C, turn pump on, start timer.
-      If (SA_TEMP < CON_TEMP) Then                      
-        PortSet(8,1)
-        RUN_TIME = Timer(1,Sec,0)
-      EndIf
-      'If SAR Orifice temp >= 4C, turn pump off, stop and reset timer.
-      If (SA_TEMP >= CON_TEMP) Then
-        PortSet(8,0)
-        RUN_TIME = Timer(1,Sec,3)
-      EndIf
-     'If RUN_TIME >= 900 seconds, turn pump off, set FLAG(1) true, stop and reset timer.
-      If (RUN_TIME >= 900) Then       
-        PortSet(8,0)
-        FLAG(1) = true
-        RUN_TIME = Timer(1,Sec,3)
-      EndIf
+    'PUMP CONTROL
+    '
+    ' CHECK ORIFIC TEMPERATURE 
+    ' pump on at low temp
+    If (SA_TEMP < CON_TEMP) Then                      
+      CON_PUMP = true
     EndIf
+    ' pump off at high temp
+    If (CON_TEMP+1 <= SA_TEMP) Then
+      CON_PUMP = false
+    EndIf
+    'CHECK TIME
+    SA_OFF_TIME = Timer(2,sec,4)
+    If (SA_OFF_TIME > CON_TIME_ON) Then
+      CON_TIME = false
+    EndIf
+    SA_RUN_TIME = Timer(1,Sec,4)
+    If (SA_RUN_TIME > CON_TIME_OFF OR CON_TIME = true) Then
+      CON_PUMP = false
+      CON_TIME = true
+    EndIf
+    ' Take action
+    PortGet(PUMP_ON,8)
+    If (CON_PUMP = true AND PUMP_ON = 0 ) Then
+      PortSet(8,1)
+      Timer(1,Sec,2)
+      Timer(2,Sec,3)
+    EndIf
+    If (CON_PUMP = false AND PUMP_ON = 1) Then
+      PortSet(8,0)
+      Timer(1,Sec,3)
+      Timer(2,Sec,2)
+    EndIf
+    '
 
     'MEASURE PYRANOMETER
     VoltDiff (SOLAR_Wm2,1,mV25,1,True,0,_60Hz,98.4834,0)
@@ -158,10 +226,12 @@ BeginProg
     SOLAR_MJ = SOLAR_Wm2 * SOLARMULT
     '
     'CORRECT SNOW DEPTH MEASUREMENT
-    TEMP_CORR_DISTANCE=RAW_DIST*(SQR((AIR_TEMP+273.15)/273.15))
+    SNOW_DIST_CORRECTION=(SQR((AIR_TEMP+273.15)/273.15))
+    TEMP_CORR_DISTANCE=SNOW_RAW_DIST*SNOW_DIST_CORRECTION
     SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
     '
     'SUBTRACT TARE FOR SNOW PILLOW
+    SWE_RAW =  SWE
     SWE = SWE - SNOW_TARE
     '
     'COMPUTE TOTAL TIPS
@@ -179,6 +249,8 @@ BeginProg
     '
     '5 MINUTE OUTPUT
     CallTable Table105
+    CallTable CONT
+    CallTable SYS
   NextScan
 EndProg
 
