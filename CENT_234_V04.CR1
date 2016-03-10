@@ -1,0 +1,184 @@
+'CR1000 Series Datalogger
+'Program name: CENT_234_V04.CR1
+'
+'Version 1 Created on 4-22-15 By JM & AK
+'
+'Version 2 Modified on 4-27-15 JM
+'  Removed Units QUALITY = number.  QUALITY numbers have no units of measure.
+'
+'Version 3 Modified on 4-28-15 JM
+'  Changed Snow Depth Sensor instruction from "M!" to "M1!".
+'
+'Version 4 Created 1/14/2016 AK
+'  Changed TableFile("USB:CENT_234_Table105",8,-1,0,0,Hr,0,0) to TableFile("CRD:CENT_234_Table105_",64,-1,0,1,Day,0,0)
+'  Update OS to 28 and added NL116 with 4GB storage card.
+'
+'Declare Constant Variable
+Const LID              = 234
+Const INITIAL_DISTANCE = 2.5
+
+'Declare Public Variables
+Public LOGGERID
+Public PROGID As Long
+Public SA_PRECIP
+Public SH_PRECIP
+Public SWE
+Public TIPPING_B
+Public TOTAL_TIPS
+Public SR50(2)
+Public TEMP_CORR_DISTANCE
+Public AIR_TEMP
+Public SNOWDEPTH
+Public SA_TEMP
+Public SH_TEMP
+Public BATTERY_V
+Public PAR
+Public SOLAR_Wm2
+Public SOLAR_MJ
+Public CON_TEMP = 4
+Public SOLARMULT
+Public SNOW_TARE
+Public FLAG(1)
+Public RUN_TIME
+
+'Alias
+Alias SR50(1)= RAW_DIST
+Alias SR50(2)= QUALITY
+
+'Declare Public Units
+Units LOGGERID        = number
+Units PROGID          = number
+Units SA_PRECIP       = millimeter
+Units SH_PRECIP       = millimeter
+Units SWE             = millimeter
+Units TIPPING_B       = tips
+Units TOTAL_TIPS      = tips
+Units SNOWDEPTH       = meter
+Units SA_TEMP         = deg c
+Units SH_TEMP         = deg c
+Units BATTERY_V       = volts
+Units PAR             = umol photons/m2/sec
+Units SOLAR_Wm2       = w m-2
+Units SOLAR_MJ        = MJ
+Units SOLARMULT       = number
+Units SNOW_TARE       = number
+Units CON_TEMP        = number
+Units RUN_TIME        = number
+
+'\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
+
+'5 MINUTE OUTPUT
+DataTable(Table105,true,-1)
+  TableFile("CRD:CENT_234_Table105_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,SA_PRECIP,FP2)
+  Sample (1,SH_PRECIP,FP2)
+  Sample (1,SWE,FP2)
+  Sample (1,SNOWDEPTH,FP2)
+  Sample (1,QUALITY,FP2)
+  Totalize (1,TIPPING_B,FP2,0)
+  Average (1,SA_TEMP,FP2,0)
+  Average (1,SH_TEMP,FP2,0)
+  Average (1,BATTERY_V,FP2,0)
+  Average (1,PAR,FP2,0)
+  Average (1,SOLAR_Wm2,FP2,0)
+  Maximum (1,PAR,FP2,False,0)
+  Maximum (1,SOLAR_Wm2,FP2,False,0)
+EndTable
+'
+'Main Program
+BeginProg
+  Scan (15,Sec,0,0)
+    '\\\\\\\\\\\\\\\\\\\\\\\\ Sub Routines ////////////////////////
+    'Pump Control
+    'If FLAG(1) false procede, if true stop.
+    If FLAG(1) = false Then
+      'If Raingage orifice temp < 4C, turn pump on, start timer.
+      If (SA_TEMP < CON_TEMP) Then                      
+        PortSet(8,1)
+        RUN_TIME = Timer(1,Sec,0)
+      EndIf
+      'If SAR Orifice temp >= 4C, turn pump off, stop and reset timer.
+      If (SA_TEMP >= CON_TEMP) Then
+        PortSet(8,0)
+        RUN_TIME = Timer(1,Sec,3)
+      EndIf
+     'If RUN_TIME >= 900 seconds, turn pump off, set FLAG(1) true, stop and reset timer.
+      If (RUN_TIME >= 900) Then       
+        PortSet(8,0)
+        FLAG(1) = true
+        RUN_TIME = Timer(1,Sec,3)
+      EndIf
+    EndIf
+
+    'MEASURE PYRANOMETER
+    VoltDiff (SOLAR_Wm2,1,mV25,1,True,0,_60Hz,98.4834,0)
+    '
+    'MEASURE PAR
+    VoltDiff (PAR,1,mV25,2,True,0,_60Hz,280.9,0)
+    '
+    'MEASURE STAND ALONE RAIN GAGE FLOAT
+    VoltDiff (SA_PRECIP,1,mV250,3,True,0,_60Hz,3.7160,-184.31)
+    '
+    'MEASURE SHELTER RAIN GAGE FLOAT
+    VoltDiff (SH_PRECIP,1,mV250,4,True,0,_60Hz,4.7880,-237.48)
+    '
+    'MEASURE SNOW PILLOW
+    BrFull (SWE,1,mV25,5,Vx1,1,1524,True,True,0,_60Hz,718.76, 0)
+    '
+    'MEASURE TIPPING BUCKET LYSIMETER
+    PulseCount (TIPPING_B,1,1,2,0,1.0,0)
+    '
+    'MEASURE SR50A SNOW DEPTH SENSOR
+    SDI12Recorder (SR50(),3,0,"M1!",1.0,0)
+    '
+    'MEASURE STAND ALONE RAINGAGE ORIFICE TEMP
+    Therm107 (SA_TEMP,1,11,Vx2,0,_60Hz,1.0,0)
+    '
+    'MEASURE SHELTER RAINGAGE ORIFICE TEMP
+    Therm107 (SH_TEMP,1,12,Vx2,0,_60Hz,1.0,0)
+    '
+    'MEASURE AIR TEMP
+    Therm107 (AIR_TEMP,1,13,Vx2,0,_60Hz,1.0,0)
+    '
+    'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+    '
+    'PROCESS DATA
+    '
+    'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
+    If (SOLAR_Wm2 < 0) Then
+      SOLAR_Wm2 = 0
+    EndIf
+    '
+    'COMPUTE MEJAJOULES FOR 15 SECOND PERIOD
+    SOLARMULT = 1.5E-5
+    SOLAR_MJ = SOLAR_Wm2 * SOLARMULT
+    '
+    'CORRECT SNOW DEPTH MEASUREMENT
+    TEMP_CORR_DISTANCE=RAW_DIST*(SQR((AIR_TEMP+273.15)/273.15))
+    SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    '
+    'SUBTRACT TARE FOR SNOW PILLOW
+    SWE = SWE - SNOW_TARE
+    '
+    'COMPUTE TOTAL TIPS
+    TOTAL_TIPS = TOTAL_TIPS + TIPPING_B
+    '
+    'OUTPUT DATA
+    '
+    'SET LOGGERID TO 234
+    LOGGERID = LID
+    '
+    'RECORD THE SIGNATURE AS PROGID
+    If TimeIntoInterval(0,1,Min) Then
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+    '
+    '5 MINUTE OUTPUT
+    CallTable Table105
+  NextScan
+EndProg
+
