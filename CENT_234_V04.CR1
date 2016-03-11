@@ -13,6 +13,9 @@
 '  Changed TableFile("USB:CENT_234_Table105",8,-1,0,0,Hr,0,0) to TableFile("CRD:CENT_234_Table105_",64,-1,0,1,Day,0,0)
 '  Update OS to 28 and added NL116 with 4GB storage card.
 '
+
+'PROGRAM VARIABLES
+'////////////////////////////////////////////////////
 'Declare Constant Variable
 Const LID              = 234
 Const INITIAL_DISTANCE = 2.5
@@ -62,6 +65,9 @@ Units SOLARMULT       = number
 Units SNOW_TARE       = number
 Units CON_TEMP        = number
 
+
+'CONTROL PARAMETERS
+'#######################################################
 'CONT Table variables
 Public SA_TEMP
 Public SA_RUN_TIME
@@ -73,6 +79,31 @@ Public CON_TIME
 Public CON_PUMP
 Public PUMP_ON
 
+Units SA_RUN_TIME = seconds
+Units SA_OFF_TIME = seconds
+Units CON_TIME_OFF = seconds
+Units CON_TIME_ON = seconds
+
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,true,-1)
+  TableFile("CRD:CENT_234_CONT_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Average (1,SA_TEMP,FP2,0)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+EndTable
+
+'SYSTEM Diagnostics
+'#######################################################
 'SYS Table variables
 Dim SNOW_DIST_CORRECTION
 Dim SWE_RAW
@@ -137,49 +168,16 @@ DataTable(Table105,true,-1)
   Maximum (1,SOLAR_Wm2,FP2,False,0)
 EndTable
 
-'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,true,-1)
-  TableFile("CRD:CENT_234_CONT_",64,-1,0,1,Day,0,0) 
-  DataInterval(0,5,Min,10)
-  Sample (1,LOGGERID,FP2)
-  Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
-  Average (1,SA_TEMP,FP2,0)
-  Sample (1,CON_TEMP,FP2)
-  Sample (1,PUMP_ON,Boolean)
-  Sample (1,CON_PUMP,Boolean)
-  Sample (1,CON_TIME,Boolean)
-  Sample (1,SA_RUN_TIME,Long)
-  Sample (1,SA_OFF_TIME,Long)
-  Sample (1,CON_TIME_ON,Long)
-  Sample (1,CON_TIME_OFF,Long)
-EndTable
-
-DataTable(SYS,true,-1)
-  TableFile("CRD:CENT_234_SYS_",64,-1,0,1,Day,0,0)
-  DataInterval(0,5,min,10)
-  Sample (1,LOGGERID,FP2)
-  Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
-  Sample (1,SNOW_INITIAL_DISTANCE,FP2)
-  Sample(1,SNOW_RAW_DIST,FP2)
-  Sample(1,SNOW_DIST_CORRECTION,FP2)
-  Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
-  Sample(1,SNOW_AIR_TEMP,FP2)
-  Sample(1,SWE_RAW,FP2)
-  Sample(1,SWE_TARE,FP2)
-  
-EndTable
 '
 'Main Program
+'///////////////////////////////////////////////////////////////
 BeginProg
   SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
 
   Timer(2,Sec,2)
-  Scan (15,Sec,0,0)
-    '\\\\\\\\\\\\\\\\\\\\\\\\ Sub Routines ////////////////////////
+  Scan (15,Sec,0,0)    
     'PUMP CONTROL
-    '
+    '#############################################################
     ' CHECK ORIFIC TEMPERATURE 
     ' pump on at low temp
     If (SA_TEMP < CON_TEMP) Then                      
