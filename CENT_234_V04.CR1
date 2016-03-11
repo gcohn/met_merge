@@ -82,7 +82,39 @@ Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
 Alias AIR_TEMP= SNOW_AIR_TEMP
 Alias SNOW_TARE = SWE_TARE
 
-'\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
+'COEF defenitions
+Public coef_SOLAR_Wm2 = 98.4834
+Public coef_PAR = 280.9
+Public coef_SA_PRECIP = 3.716
+Public offset_SA_PRECIP = -184.31
+Public coef_SH_PRECIP = 4.7880
+Public offset_SH_PRECIP = -237.48
+Public coef_SWE = 718.76
+
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:CENT_234_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample (1,SNOW_INITIAL_DISTANCE,FP2)
+  Sample(1,SNOW_RAW_DIST,FP2)
+  Sample(1,SNOW_DIST_CORRECTION,FP2)
+  Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
+  Sample(1,SNOW_AIR_TEMP,FP2)
+  Sample(1,SWE_RAW,FP2)
+  Sample(1,SWE_TARE,FP2)  
+  Sample(1,coef_SOLAR_Wm2,FP2)
+  Sample(1,coef_PAR,FP2)
+  Sample(1,coef_SA_PRECIP,FP2)
+  Sample(1,offset_SA_PRECIP,FP2)
+  Sample(1,coef_SH_PRECIP,FP2)
+  Sample(1,offset_SH_PRECIP,FP2)
+  Sample(1,coef_SWE,FP2)
+EndTable
+
+'\\\\\\\\\\\\\\\\\\\\\\\\PROGRAM OUTPUT////////////////////////
 
 '5 MINUTE OUTPUT
 DataTable(Table105,true,-1)
@@ -182,19 +214,19 @@ BeginProg
     '
 
     'MEASURE PYRANOMETER
-    VoltDiff (SOLAR_Wm2,1,mV25,1,True,0,_60Hz,98.4834,0)
+    VoltDiff (SOLAR_Wm2,1,mV25,1,True,0,_60Hz,coef_SOLAR_Wm2 ,0)
     '
     'MEASURE PAR
-    VoltDiff (PAR,1,mV25,2,True,0,_60Hz,280.9,0)
+    VoltDiff (PAR,1,mV25,2,True,0,_60Hz,coef_PAR,0)
     '
     'MEASURE STAND ALONE RAIN GAGE FLOAT
-    VoltDiff (SA_PRECIP,1,mV250,3,True,0,_60Hz,3.7160,-184.31)
+    VoltDiff (SA_PRECIP,1,mV250,3,True,0,_60Hz,coef_SA_PRECIP,offset_SA_PRECIP)
     '
     'MEASURE SHELTER RAIN GAGE FLOAT
-    VoltDiff (SH_PRECIP,1,mV250,4,True,0,_60Hz,4.7880,-237.48)
+    VoltDiff (SH_PRECIP,1,mV250,4,True,0,_60Hz,coef_SH_PRECIP,offset_SH_PRECIP)
     '
     'MEASURE SNOW PILLOW
-    BrFull (SWE,1,mV25,5,Vx1,1,1524,True,True,0,_60Hz,718.76, 0)
+    BrFull (SWE,1,mV25,5,Vx1,1,1524,True,True,0,_60Hz,coef_SWE, 0)
     '
     'MEASURE TIPPING BUCKET LYSIMETER
     PulseCount (TIPPING_B,1,1,2,0,1.0,0)
