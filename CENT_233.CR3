@@ -1,4 +1,4 @@
-'Program name: CENT_233_V04.CR3
+'Program name: CENT_233_V05.CR3
 'Date written: 4-16-15 by AK
 
 'Modifications:  
@@ -14,6 +14,8 @@
   '  Removed daily output from program
   '  Changed TableFile("USB:CENT_233_Table440",8,-1,0,0,Hr,0,0) to TableFile("CRD:CENT_233_Table105_",64,-1,0,1,Day,0,0)
   '  Update OS to 28 and added NL116 with 4GB storage card.
+'Version 5 Created 3/10/16 by GC
+  '  Changes to CENT_234
 
 Const SCAN_INTERVAL      = 1   'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
@@ -45,6 +47,7 @@ Public LOGGERID
 Public PROGID As Long
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
+Public PROG_VERS = 5
 
 Alias HMP_150(1) = AIR_150
 Alias HMP_150(2) = RH_150

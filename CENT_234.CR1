@@ -1,5 +1,5 @@
 'CR1000 Series Datalogger
-'Program name: CENT_234_V04.CR1
+'Program name: CENT_234_V05.CR1
 '
 'Version 1 Created on 4-22-15 By JM & AK
 '
@@ -12,6 +12,10 @@
 'Version 4 Created 1/14/2016 AK
 '  Changed TableFile("USB:CENT_234_Table105",8,-1,0,0,Hr,0,0) to TableFile("CRD:CENT_234_Table105_",64,-1,0,1,Day,0,0)
 '  Update OS to 28 and added NL116 with 4GB storage card.
+'Version 5 Created 3/10/2016 GC
+'  Updated standalone pump controls to fix bug
+'  Added CONT table to track pump controls
+'  Added SYS table to track raw SNOW_DEPTH, SWE tare, and other coefficients
 '
 
 'PROGRAM VARIABLES
