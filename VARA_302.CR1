@@ -22,7 +22,10 @@
 'Version 16 Created on 2/21/16 by GC
       ' Added SYS table to track non-data system variables
       ' Tracks raw distances from snow depth sensor, and tare values for SWE sensor
-'          
+' 
+
+'PROGRAM VARIABLES
+'////////////////////////////////////////////////////         
 'Declare Constant Variable
 Const LID              = 302
 Const INITIAL_DISTANCE = 5.60
@@ -39,15 +42,6 @@ Public TEMP_CORR_DISTANCE
 Public SNOWDEPTH
 Public BATTERY_V
 Public OR_PRECIP
-Public OR_TEMP
-Public OR_RUN_TIME
-Public OR_OFF_TIME
-Public CON_TEMP = 4
-Public CON_TIME_OFF = 900
-Public CON_TIME_ON = 1209600
-Public CON_TIME
-Public CON_PUMP
-Public PUMP_ON
 Public PROG_VERS=16
 Public SNOW_TARE = 10
 
@@ -55,8 +49,6 @@ Public SNOW_TARE = 10
 'Alias
 Alias SR50(1)= SNOW_RAW_DIST
 Alias SR50(2)= QUALITY
-Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
-Alias AIR_450= SNOW_AIR_TEMP
 
 
 
@@ -74,12 +66,82 @@ Units SNOW_TARE       = number
 Units CON_TEMP        = number
 
 
+'CONTROL PARAMETERS
+'#######################################################
+'CONT Table variables
+Public OR_TEMP
+Public OR_RUN_TIME
+Public OR_OFF_TIME
+Public CON_TEMP = 4
+Public CON_TIME_OFF = 900
+Public CON_TIME_ON = 1209600
+Public CON_TIME
+Public CON_PUMP
+Public PUMP_ON
+
+Alias OR_TEMP = SA_TEMP
+Alias OR_RUN_TIME = SA_RUN_TIME
+Alias OR_OFF_TIME = SA_OFF_TIME
+
+Units SA_RUN_TIME = seconds
+Units SA_OFF_TIME = seconds
+Units CON_TIME_OFF = seconds
+Units CON_TIME_ON = seconds
+
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,true,-1)
+  TableFile("CRD:VARA_302_CONT_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Average (1,SA_TEMP,FP2,0)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+EndTable
+
+'SYSTEM Diagnostics
+'#######################################################
+'SYS Table variables
 Dim SNOW_DIST_CORRECTION
 Dim  SWE_RAW
 Dim SNOW_INITIAL_DISTANCE
 
-'\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
+Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
+Alias AIR_450= SNOW_AIR_TEMP
+Alias SNOW_TARE = SWE_TARE
 
+'COEF defenitions
+Public coef_SA_PRECIP = 3.716
+Public offset_SA_PRECIP = -184.31
+Public coef_SWE = 718.76
+
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:VARA_302_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample (1,SNOW_INITIAL_DISTANCE,FP2)
+  Sample(1,SNOW_RAW_DIST,FP2)
+  Sample(1,SNOW_DIST_CORRECTION,FP2)
+  Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
+  Sample(1,SNOW_AIR_TEMP,FP2)
+  Sample(1,SWE_RAW,FP2)
+  Sample(1,SWE_TARE,FP2)  
+  Sample(1,coef_SA_PRECIP,FP2)
+  Sample(1,offset_SA_PRECIP,FP2)
+  Sample(1,coef_SWE,FP2)
+EndTable
+
+'\\\\\\\\\\\\\\\\\\\\\\\\PROGRAM OUTPUT////////////////////////
 '5 MINUTE OUTPUT
 DataTable(Table105,true,-1)
   TableFile("CRD:VARA_302_Table105_",64,-1,0,1,Day,0,0) 
@@ -99,40 +161,6 @@ DataTable(Table105,true,-1)
  
 EndTable
 
-'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,true,-1)
-  TableFile("CRD:VARA_302_CONT_",64,-1,0,1,Day,0,0) 
-  DataInterval(0,5,Min,10)
-  Sample (1,LOGGERID,FP2)
-  Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
-  Average (1,OR_TEMP,FP2,0)
-  Sample (1,CON_TEMP,FP2)
-  Sample (1,PUMP_ON,Boolean)
-  Sample (1,CON_PUMP,Boolean)
-  Sample (1,CON_TIME,Boolean)
-  Sample (1,OR_RUN_TIME,Long)
-  Sample (1,OR_OFF_TIME,Long)
-  Sample (1,CON_TIME_ON,Long)
-  Sample (1,CON_TIME_OFF,Long)
-  Average (1,PUMPVOLTS,FP2,0)  
-EndTable
-
-DataTable(SYS,true,-1)
-  TableFile("CRD:VARA_302_SYS_",64,-1,0,1,Day,0,0)
-  DataInterval(0,5,min,10)
-  Sample (1,LOGGERID,FP2)
-  Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
-  Sample (1,SNOW_INITIAL_DISTANCE,FP2)
-  Sample(1,SNOW_RAW_DIST,FP2)
-  Sample(1,SNOW_DIST_CORRECTION,FP2)
-  Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
-  Sample(1,SNOW_AIR_TEMP,FP2)
-  Sample(1,SWE_RAW,FP2)
-  Sample(1,SNOW_TARE,FP2)
-  
-EndTable
 '
 'Main Program
 BeginProg
@@ -177,7 +205,7 @@ BeginProg
   
     '
     'MEASURE STAND ALONE RAIN GAGE FLOAT
-    VoltDiff (PRECIP,1,mV250,1,True,0,_60Hz,3.7160,-184.31)
+    VoltDiff (PRECIP,1,mV250,1,True,0,_60Hz,coef_SA_PRECIP,offset_SA_PRECIP)
     '
     'MEASURE ORIFICE TEMP
     Therm107 (OR_TEMP,1,3,Vx1,0,_60Hz,1.0,0)
@@ -189,7 +217,7 @@ BeginProg
     VoltDiff (PUMPVOLTS,1,mV2500,3,True,0,_60Hz,0.01,0)
     '
     'MEASURE SNOW PILLOW
-    BrFull (SWE,1,mV25,4,Vx3,1,1524,True,True,0,_60Hz,718.76, 0)    
+    BrFull (SWE,1,mV25,4,Vx3,1,1524,True,True,0,_60Hz,coef_SWE, 0)    
     '
     'MEASURE SR50A SNOW DEPTH SENSOR
     SDI12Recorder (SR50(),1,0,"M1!",1.0,0)
