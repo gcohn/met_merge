@@ -109,7 +109,39 @@ Units AIR_250_diag    = number
 
 Dim n                 = 1
 
-'\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
+'SYSTEM Diagnostics
+'#######################################################
+'SYS Table variables
+Dim WCRWC_10_RAW
+Dim WCRWC_20_RAW
+Dim WCRWC_50_RAW
+Dim WCRWC_100_RAW
+
+'COEF defenitions
+Public coef_AIR_150 = 0.1
+Public offset_AIR_150 = -40
+Public coef_AIR_450 = 0.1
+Public offset_AIR_450 = -40
+Public coef_RH_150 = 0.1
+Public coef_RH_450 = 0.1
+Public coef_WCRPA = 0.001
+Public coef_WINDSPEED = 0.098
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:CENT_233_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample(1,coef_AIR_150,FP2)
+  Sample(1,coef_AIR_450,FP2)
+  Sample(1,offset_AIR_150,FP2)
+  Sample(1,offset_AIR_450,FP2)
+  Sample(1,coef_RH_150,FP2)
+  Sample(1,coef_RH_450,FP2)
+EndTable
+
+'\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM OUTPUT ////////////////////////
 '5 MINUTE OUTPUT
 DataTable(Table105,true,-1)
   TableFile("CRD:CENT_233_Table105_",64,-1,0,1,Day,0,0)
@@ -165,10 +197,8 @@ DataTable(Table105,true,-1)
   
 EndTable
 
-'\\\\\\\\\\\\\\\\\\\\\\\\\ SUBROUTINES //////////////////////////
 
-
-'\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
+'\\\\\\\\\\\\\\\\\\\\\\\\\\\ MAIN PROGRAM ////////////////////////////
 '
 'MEASURE GILL WINDOBSERVER II SONIC ANAMOMETER
 BeginProg
@@ -213,7 +243,7 @@ BeginProg
     EndIf
     '
     'MEASURE WIND SPEED
-    PulseCount(WINDSPEED,1,1,1,1,0.098,0)
+    PulseCount(WINDSPEED,1,1,1,1,coef_WINDSPEED,0)
   NextScan
 
   SlowSequence
@@ -222,10 +252,10 @@ BeginProg
     'MEASURE 1.5M & 4.5M HMP45C'S
     SW12 (2,1)
     Delay(0,150,mSec)
-    VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,0.1,-40)
-    VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,0.1,0)
-    VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,0.1,-40)
-    VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,0.1,0)
+    VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,coef_AIR_150,offset_AIR_150)
+    VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,coef_RH_150,0)
+    VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,coef_AIR_450,offset_AIR_150)
+    VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,coef_RH_450,0)
     SW12 (2,0)
     '
     'MEASURE 4 SOIL TEMPS
@@ -233,7 +263,7 @@ BeginProg
     '
     'MEASURE FOUR WATER CONTENT REFLECTOMETERS
     PortSet(4,1)
-    PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,0.001,0)
+    PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,coef_WCRPA,0)
     PortSet(4,0)
     '
     'MEASURE WIND DIRECTION
@@ -283,5 +313,6 @@ BeginProg
     '
     '5 MINUTE OUTPUT
     CallTable Table105
+    CallTable SYS
   NextScan
 EndProg
