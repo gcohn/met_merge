@@ -112,10 +112,7 @@ Dim n                 = 1
 'SYSTEM Diagnostics
 '#######################################################
 'SYS Table variables
-Dim WCRWC_10_RAW
-Dim WCRWC_20_RAW
-Dim WCRWC_50_RAW
-Dim WCRWC_100_RAW
+
 
 'COEF defenitions
 Public coef_AIR_150 = 0.1
@@ -139,6 +136,12 @@ DataTable(SYS,true,-1)
   Sample(1,offset_AIR_450,FP2)
   Sample(1,coef_RH_150,FP2)
   Sample(1,coef_RH_450,FP2)
+  Sample(1,coef_WCRPA,FP2)
+  Sample(1,coef_WINDSPEED,FP2)
+  Sample(1,WCRPA_10,FP2)
+  Sample(1,WCRPA_20,FP2)
+  Sample(1,WCRPA_50,FP2)
+  Sample(1,WCRPA_100,FP2)
 EndTable
 
 '\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM OUTPUT ////////////////////////
@@ -291,7 +294,7 @@ BeginProg
     DewPoint(DEWPT150,AIR_150,RH_150)
     DewPoint(DEWPT450,AIR_450,RH_450)
     '
-    'CONVERT WCR PERIOD TO WATER CONTENT
+    'CONVERT WCR PERIOD TO WATER CONTENT    
     WCRWC_10=-0.187+0.037*WCRPA_10+0.335*WCRPA_10^2+0*WCRPA_10^3+0*WCRPA_10^4+0*WCRPA_10^5
     WCRWC_20=-0.187+0.037*WCRPA_20+0.335*WCRPA_20^2+0*WCRPA_20^3+0*WCRPA_20^4+0*WCRPA_20^5
     WCRWC_50=-0.187+0.037*WCRPA_50+0.335*WCRPA_50^2+0*WCRPA_50^3+0*WCRPA_50^4+0*WCRPA_50^5
