@@ -88,24 +88,21 @@ Units SA_OFF_TIME = seconds
 Units CON_TIME_OFF = seconds
 Units CON_TIME_ON = seconds
 
+Dim LogNow = false
+
 'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,true,-1)
+DataTable(CONT,LogNow=true,-1)
   TableFile("CRD:CENT_234_CONT_",64,-1,0,1,Day,0,0) 
-  DataInterval(0,5,Min,10)
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
   Sample (1,PROG_VERS,FP2)
-  Maximum (1,SA_TEMP,FP2,0,1)
-  Minimum (1,SA_TEMP,FP2,0,1)
+  Sample (1,SA_TEMP,FP2)
   Sample (1,CON_TEMP,FP2)
-  Maximum (1,PUMP_ON,Boolean,0,1)
-  Minimum (1,PUMP_ON,Boolean,0,1)
-  Maximum (1,CON_PUMP,Boolean,0,1)
-  Minimum (1,CON_PUMP,Boolean,0,1) 
-  Maximum (1,CON_TIME,Boolean,0,1)
-  Minimum (1,CON_TIME,Boolean,0,1)
-  Maximum (1,SA_RUN_TIME,Long,0,1)
-  Maximum (1,SA_OFF_TIME,Long,0,1)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
   Sample (1,CON_TIME_ON,Long)
   Sample (1,CON_TIME_OFF,Long)
 EndTable
@@ -188,6 +185,7 @@ BeginProg
     '#############################################################
     ' CHECK ORIFIC TEMPERATURE 
     ' pump on at low temp
+    LogNow = false
     If (SA_TEMP < CON_TEMP) Then                      
       CON_PUMP = true
     EndIf
@@ -207,16 +205,20 @@ BeginProg
     EndIf
     ' Take action
     PortGet(PUMP_ON,8)
-    If (CON_PUMP = true AND PUMP_ON = 0 ) Then
+    If (CON_PUMP = true AND PUMP_ON = 0 ) Then      
+      LogNow = true
       PortSet(8,1)
       Timer(1,Sec,2)
       Timer(2,Sec,3)
     EndIf
     If (CON_PUMP = false AND PUMP_ON = 1) Then
+      LogNow = true
       PortSet(8,0)
       Timer(1,Sec,3)
-      Timer(2,Sec,2)
+      Timer(2,Sec,2)     
     EndIf
+    
+    
     '
 
     'MEASURE PYRANOMETER
