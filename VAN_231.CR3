@@ -1,34 +1,42 @@
-'Program name: VAN_231_V05.CR3
-'Date written: 4-15-15
-
-'Modifications:
-' 1. 2013-09-18 - converted all kPa to mb. AK
-' 2. Version 2 modified 5/20/14.  Added all sensors to 5 minute output.
-' 3. Version 3 created 2/15/2015. Added 5min max/min to air temperature probes. 
-  '  Added 5min max wind gust to propellor. Removed 15 and 60 min from output. AK
-' 4. Version 4 created 3/18/2015. 
+' CR3000 Series Datalogger
+' Program name: VAN_231_V08.1.CR3
+' Written for CR3000 datalogger on Vanmet tower.
+'
+' Version 1 Created 2013-09-18 by AK
+  ' converted all kPa to mb.
+' Version 2 modified 5/20/14.  
+  ' Added all sensors to 5 minute output.
+' Version 3 Created 2/15/2015 by AK
+  ' Added 5min max/min to air temperature probes. 
+  '  Added 5min max wind gust to propellor. Removed 15 and 60 min from output.
+' Version 4 Created 3/18/2015. 
   '  Added 1.5m and 4.5m min/max dewpoint to 5min table. 
   '  Changed progid from FP2 to Long
   '  Removed VPD, VAP, and SatVP from output
-' 5. Version 5 created 4-15-15
+' Version 5 Created 4-15-15
   '  Changed pyranometer multiplyer back to 84.274 for pyranometer serial no. 920423,
   '  which was installed on 8-26-11.  Multiplyer incorrectly changed to 104.341 on
   '  5-21-12 and then incorrectly changed again on 9-4-13 to 74.355.
-' 6. Version 6 created 11-17-2015
+' Version 6 Created 11-17-2015
   '  Removed MJ solar output totals from all tables
   '  Removed daily table output.
   '  Added Cardout(), added NL116 with 4GB CF card.
-' 7. Version 7 created 11-19-2015
+' Version 7 created 11-19-2015
   '  Removed CardOut() - this command expired for CF cards over 4GB
   '  Added TableFile() command to save data in TOB3 format on CRD.
   '  Removed TableFile() to USB becuase only one TableFile() call permitted per table.
   '  Lost network comm with logger yesterday so verified MAC stored on logger.  
-    
+' Version 8.1 created 3-23-16 by GC
+  ' Added standardized SYS table to track calibration coeficients, SWE tares, and raw instrument values
+  ' Add decimal subversionioning: 8 is VARA program version; 1 is a unified site program version.
+
+'PROGRAM VARIABLES
+'////////////////////////////////////////////////////         
+'Declare Constant Variable    
 Const LID              = 231
 Const INITIAL_DISTANCE = 5.03
 
-'\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
-
+'Declare Public Variable 
 Public HMP_150(3) As Float
 Public HMP_450(3) As Float
 Public AIR_250
@@ -52,7 +60,7 @@ Public PROGID as Long
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
 Public SNOW_diag=1 '1 = snow present; 0=snow absent
-Public PROG_VERS = 7
+Public PROG_VERS = 8.1
 
 Alias HMP_150(1) = AIR_150
 Alias HMP_150(2) = RH_150
@@ -165,7 +173,7 @@ EndTable
 '\\\\\\\\\\\\\\\\\\\\\\\\PROGRAM OUTPUT////////////////////////
 '5 MINUTE OUTPUT
 DataTable(Table105,true,-1)
-  TableFile("CRD:VAN_231_Table105",64,-1,0,1,Day,0,0)    
+  TableFile("CRD:VAN_231_Table105_",64,-1,0,1,Day,0,0)    
   DataInterval(0,5,Min,10)                   
   Sample(1,LOGGERID,FP2)
   Sample(1,PROGID,Long)

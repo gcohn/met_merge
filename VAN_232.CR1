@@ -1,13 +1,21 @@
-'CR1000 Series Datalogger
-'Program for CR1000 datalogger on Vanmet tower.  Measures NR01, Gill Windobserver II
-'sonic anamometer.   
+' CR1000 Series Datalogger
+' Program name: VAN_232_V03.1.CR1
+' Program for CR1000 datalogger on Vanmet tower.  Measures NR01, Gill Windobserver II
+' sonic anamometer.  
+'
 ' Version 1 Written by John Moreau on 9-4-13.
 ' Version 2 Created 1/14/2016 AK
   ' Changed  TableFile("USB:VAN_232_snc_avg",8,-1,0,0,Hr,0,0) to 
   ' TableFile("CRD:VAN_232_snc_avg_",64,-1,0,1,Day,0,0) and 
   ' TableFile("USB:VAN_232_rad_temp_avg",8,-1,0,0,Hr,0,0) to
   ' TableFile("CRD:VAN_232_rad_temp_avg_",64,-1,0,1,Day,0,0)
+' Version 3 Created on 2/21/16 by GC
+  ' Add decimal subversionioning: 03 is VAN232 program version; 
+  ' 1 is a unified VANILLA site program version.
 
+'PROGRAM VARIABLES
+'////////////////////////////////////////////////////         
+'Declare Constant Variable
 Const SCAN_INTERVAL      = 1     'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 10    'Scan interval in Sec for NR01
 Const OUTPUT_INTERVAL    = 5     'Output interval in minutes.
@@ -27,7 +35,7 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
-Public PROG_VERS = 2
+Public PROG_VERS = 3.1
 
 Units Ux   = [m s-1]
 Units Uy   = [m s-1]

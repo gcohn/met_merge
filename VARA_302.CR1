@@ -1,16 +1,17 @@
-'CR1000 Series Datalogger
-'Program name: VARA_302_V15.CR1
+' CR1000 Series Datalogger
+' Program name: VARA_302_V16.1.CR1
+' Program for standalone raing gauge and associated sensors at VARA
 '
-'Version 11 Created on 7-15-15 FOR UPGRADE FROM CR10X DATALOGGER TO CR1000
-'Version 12 Created on 11-17-2015: Added Cardout(), added NL116 with 4GB CF card. AK             
-'Version 13 Created on 11-19-2015: Removed Cardout() - this command retired for >4GB cards
+' Version 11 Created on 7-15-15 FOR UPGRADE FROM CR10X DATALOGGER TO CR1000
+' Version 12 Created on 11-17-2015: Added Cardout(), added NL116 with 4GB CF card. AK             
+' Version 13 Created on 11-19-2015: Removed Cardout() - this command retired for >4GB cards
           ' Removed TableFile call to USB
           ' Added TableFile call to CRD
           ' TOB3 file format on CRD card for speedy writing
-'Version 14 Created 1/14/2016 for upgrade to tablefile() to CRD
+' Version 14 Created 1/14/2016 for upgrade to tablefile() to CRD
           ' Added "_" after _105 in "CRD:VARA_302_Table105" so CardOut is able to sort
           ' individual TOB3 files correctly.  
-'Version 15 Created on 1/20/16
+' Version 15 Created on 1/20/16
 		  ' Modifications to heater pump subroutine (for standalone raing gauge)
 		  ' 	1. removed FLAG array variable
 		  '		2. Added CONT_*, OR_*, and PUMP_ON variables to public table
@@ -19,10 +20,12 @@
 		  '		5. Altered pump control logic
 		  '	Added CONT data table to monitor pump and pump control function
 		  ' Added PROG_VERS variable to public table (output to CONT data table)
-'Version 16 Created on 2/21/16 by GC
+' Version 16 Created on 2/21/16 by GC
       ' Added SYS table to track non-data system variables
       ' Tracks raw distances from snow depth sensor, and tare values for SWE sensor
-' 
+	  '	SYS table standardized on 3/23/16
+	  ' CONT table corrections made on 3/23/16
+	  ' Add decimal subversionioning: 16 is VARA program version; 1 is a unified site program version.
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -42,7 +45,7 @@ Public TEMP_CORR_DISTANCE
 Public SNOWDEPTH
 Public BATTERY_V
 Public OR_PRECIP
-Public PROG_VERS=16
+Public PROG_VERS=16.1
 Public SNOW_TARE = 10
 
 
