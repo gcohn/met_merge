@@ -27,6 +27,7 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
+Public PROG_VERS = 2
 
 Units Ux   = [m s-1]
 Units Uy   = [m s-1]
