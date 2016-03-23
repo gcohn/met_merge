@@ -1,25 +1,31 @@
 'Program name: UPLO_235_V03.CR3
-'Date written: 9-11-15 by JM & SW
-  
-'Version 2 created on 9-11-15
-'  A. Changes 1.5M & 4.5M HMP45C programing from SW12v to C5.
-'  B. Adds measurement of SA_TEMP and SA_PRECIP.
-  ' Modified 11/23/2015, AK
-    '  Removed CardOut() - this command expired for CF cards over 4GB
-    '  Added TableFile() command to save data in TOB3 format on CRD.
-    '  Removed TableFile() to USB becuase only one TableFile() call permitted per table.
-'Version 3 created on 1/14/2016
+'
+
+' Version 1 written: 9-11-15 by JM & SW  
+' Version 2 created on 9-11-15
+	' A. Changes 1.5M & 4.5M HMP45C programing from SW12v to C5.
+	' B. Adds measurement of SA_TEMP and SA_PRECIP.
+	' Modified 11/23/2015, AK
+    ' Removed CardOut() - this command expired for CF cards over 4GB
+    ' Added TableFile() command to save data in TOB3 format on CRD.
+    ' Removed TableFile() to USB becuase only one TableFile() call permitted per table.
+' Version 3 created on 1/14/2016
     ' Changed TableFile("CRD:UPLO_235_Table105",64,-1,0,1,Day,0,0)  to
     ' TableFile("CRD:UPLO_235_Table105_",64,-1,0,1,Day,0,0) 
 ' Version 4 created on 2/3/2016
-  ' Modifications to heater pump subroutine (for standalone raing gauge)
-	  ' 	1. removed FLAG array variable
-		'		2. Added CONT_*, SA_*, and PUMP_ON variables to public table
-		'     3. Removed hard coded pump shut off values
-		'		4. Assigned CONT_* variables default shut off values to be altered at the terminal
-		'		5. Altered pump control logic
-		'	Added CONT data table to monitor pump and pump control function
-		' Added PROG_VERS variable to public table (output to CONT data table)
+	' Modifications to heater pump subroutine (for standalone raing gauge)
+	' 1. removed FLAG array variable
+	' 2. Added CONT_*, SA_*, and PUMP_ON variables to public table
+	' 3. Removed hard coded pump shut off values
+	' 4. Assigned CONT_* variables default shut off values to be altered at the terminal
+	' 5. Altered pump control logic
+	' Added CONT data table to monitor pump and pump control function
+	' Added PROG_VERS variable to public table (output to CONT data table)
+' Version 5 created on 2/29/16 by GC
+	' Fixed output variable assignment and standardized naming (primarily on 236)
+' Version 6 Create 3/23/16 by GC
+	' Standardize formatting with other benchmark Met stations
+	' Add calibration coefficients and offsets to SYS table
 
 Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
@@ -39,16 +45,7 @@ Public WINDSPEED
 Public WIND_DIR
 Public BATTERY_V
 Public SA_PRECIP
-Public SA_TEMP
-Public SA_RUN_TIME
-Public SA_OFF_TIME
-Public CON_TEMP = 4
-Public CON_TIME_OFF = 900
-Public CON_TIME_ON = 1209600
-Public CON_TIME
-Public CON_PUMP
-Public PUMP_ON
-Public PROG_VERS=4
+Public PROG_VERS=6
 Public WCRPA(4)
 Public sncstring As String * 60
 Public sncstring_bytes
@@ -126,6 +123,44 @@ Units AIR_250_diag    = number  '1 when sensor is present, 0 when not
 
 Dim n                 = 1
 
+'CONTROL PARAMETERS
+'#######################################################
+'CONT Table variables
+Public SA_TEMP
+Public SA_RUN_TIME
+Public SA_OFF_TIME
+Public CON_TEMP = 4
+Public CON_TIME_OFF = 900
+Public CON_TIME_ON = 1209600
+Public CON_TIME
+Public CON_PUMP
+Public PUMP_ON
+
+Units SA_RUN_TIME = seconds
+Units SA_OFF_TIME = seconds
+Units CON_TIME_OFF = seconds
+Units CON_TIME_ON = seconds
+
+Dim LogNow = false
+
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,true,-1)
+  TableFile("CRD:UPLO_235_CONT_",64,-1,0,1,Day,0,0) 
+  DataInterval(0,5,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample (1,SA_TEMP,FP2)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+EndTable
+
 '\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
 '
 '5 MINUTE OUTPUT
@@ -189,25 +224,7 @@ DataTable(Table105,true,-1)
   
 EndTable
 
-'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,true,-1)
-  TableFile("CRD:UPLO_235_CONT_",64,-1,0,1,Day,0,0) 
-  DataInterval(0,5,Min,10)
-  Sample (1,LOGGERID,FP2)
-  Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
-  Average (1,SA_TEMP,FP2,0)
-  Sample (1,CON_TEMP,FP2)
-  Sample (1,PUMP_ON,Boolean)
-  Sample (1,CON_PUMP,Boolean)
-  Sample (1,CON_TIME,Boolean)
-  Sample (1,SA_RUN_TIME,Long)
-  Sample (1,SA_OFF_TIME,Long)
-  Sample (1,CON_TIME_ON,Long)
-  Sample (1,CON_TIME_OFF,Long)
-  Average (1,BATTERY_V,FP2,0)  
-EndTable
-'
+
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 '
 'MEASURE GILL WINDOBSERVER II SONIC ANAMOMETER
@@ -259,7 +276,7 @@ BeginProg
   SlowSequence
   Scan(SCAN_INTERVAL_SLOW,Sec, 0, 0)        
     'PUMP CONTROL
-    '
+    '#############################################################
     ' CHECK ORIFIC TEMPERATURE 
     ' pump on at low temp
     If (SA_TEMP < CON_TEMP) Then                      
