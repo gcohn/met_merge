@@ -1,0 +1,258 @@
+'Program name: VAN_231_V05.CR3
+'Date written: 4-15-15
+
+'Modifications:
+' 1. 2013-09-18 - converted all kPa to mb. AK
+' 2. Version 2 modified 5/20/14.  Added all sensors to 5 minute output.
+' 3. Version 3 created 2/15/2015. Added 5min max/min to air temperature probes. 
+  '  Added 5min max wind gust to propellor. Removed 15 and 60 min from output. AK
+' 4. Version 4 created 3/18/2015. 
+  '  Added 1.5m and 4.5m min/max dewpoint to 5min table. 
+  '  Changed progid from FP2 to Long
+  '  Removed VPD, VAP, and SatVP from output
+' 5. Version 5 created 4-15-15
+  '  Changed pyranometer multiplyer back to 84.274 for pyranometer serial no. 920423,
+  '  which was installed on 8-26-11.  Multiplyer incorrectly changed to 104.341 on
+  '  5-21-12 and then incorrectly changed again on 9-4-13 to 74.355.
+' 6. Version 6 created 11-17-2015
+  '  Removed MJ solar output totals from all tables
+  '  Removed daily table output.
+  '  Added Cardout(), added NL116 with 4GB CF card.
+' 7. Version 7 created 11-19-2015
+  '  Removed CardOut() - this command expired for CF cards over 4GB
+  '  Added TableFile() command to save data in TOB3 format on CRD.
+  '  Removed TableFile() to USB becuase only one TableFile() call permitted per table.
+  '  Lost network comm with logger yesterday so verified MAC stored on logger.  
+    
+Const LID              = 231
+Const INITIAL_DISTANCE = 5.03
+
+'\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
+
+Public HMP_150(3) As Float
+Public HMP_450(3) As Float
+Public AIR_250
+Public AIR_350
+Public ASP_350
+Public SOILT(4)
+Public WCRWC(4)
+Public SOLAR_Wm2
+Public SNOW_PILL
+Public WINDSPEED
+Public WIND_DIR
+Public SR50(2)
+Public TEMP_CORR_DISTANCE
+Public SNOWDEPTH
+Public BATTERY_V
+Public SNOW_TARE
+Public WCRPA(4)
+Public SOLARMULT
+Public LOGGERID
+Public PROGID as Long
+Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
+Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
+Public SNOW_diag=1 '1 = snow present; 0=snow absent
+
+Alias HMP_150(1) = AIR_150
+Alias HMP_150(2) = RH_150
+Alias HMP_150(3) = DEWPT150
+Alias HMP_450(1) = AIR_450
+Alias HMP_450(2) = RH_450
+Alias HMP_450(3) = DEWPT450
+Alias SOILT(1)   = SOILT_10
+Alias SOILT(2)   = SOILT_20
+Alias SOILT(3)   = SOILT_50
+Alias SOILT(4)   = SOILT_100
+Alias WCRWC(1)   = WCRWC_10
+Alias WCRWC(2)   = WCRWC_20
+Alias WCRWC(3)   = WCRWC_50
+Alias WCRWC(4)   = WCRWC_100
+Alias WCRPA(1)   = WCRPA_10
+Alias WCRPA(2)   = WCRPA_20
+Alias WCRPA(3)   = WCRPA_50
+Alias WCRPA(4)   = WCRPA_100
+Alias SR50(1)    = RAW_DIST
+Alias SR50(2)    = QUALITY
+
+Units AIR_150         = deg C
+Units AIR_250         = deg C
+Units AIR_350         = deg C
+Units AIR_450         = deg C
+Units ASP_350         = deg C
+Units RH_150          = percent
+Units RH_450          = percent
+Units DEWPT150        = deg C
+Units DEWPT450        = deg C
+Units SOILT_10        = deg C
+Units SOILT_20        = deg C
+Units SOILT_50        = deg C
+Units SOILT_100       = deg C
+Units WCRWC_10        = fraction
+Units WCRWC_20        = fraction
+Units WCRWC_50        = fraction
+Units WCRWC_100       = fraction
+Units WCRPA_10        = number
+Units WCRPA_20        = number
+Units WCRPA_50        = number
+Units WCRPA_100       = number
+Units SOLAR_Wm2       = W m-2
+Units SNOW_PILL       = mm
+Units WINDSPEED       = m s-1
+Units WIND_DIR        = degrees
+Units SNOWDEPTH       = meters
+Units BATTERY_V       = volts
+Units SNOW_TARE       = number
+Units SOLARMULT       = number
+Units LOGGERID        = number
+Units PROGID          = number
+Units AIR_150_diag    = number
+Units AIR_250_diag    = number
+Units SNOW_diag       = number
+'
+'5 MINUTE OUTPUT
+DataTable(Table105,true,-1)
+  TableFile("CRD:VAN_231_Table105",64,-1,0,1,Day,0,0)    
+  DataInterval(0,5,Min,10)                   
+  Sample(1,LOGGERID,FP2)
+  Sample(1,PROGID,Long)
+  Average(1,AIR_150,FP2,0)
+  Average(1,AIR_250,FP2,0)
+  Average(1,AIR_350,FP2,0)
+  Average(1,AIR_450,FP2,0)
+  Average(1,ASP_350,FP2,0)
+  Average(1,RH_150,FP2,0)
+  Average(1,RH_450,FP2,0)
+  Average(1,DEWPT150,FP2,0)
+  Average(1,DEWPT450,FP2,0)  
+  Average(4,SOILT,FP2,0)
+  Average(4,WCRWC,FP2,0)
+  Average(1,SOLAR_Wm2,FP2,0)
+  Sample(1,SNOWDEPTH,FP2)
+  Sample(1,QUALITY,FP2)
+  Average(1,WINDSPEED,FP2,0)
+  Sample(1,WIND_DIR,FP2)
+  Sample(1,SNOW_PILL,FP2)
+  WindVector(1,WINDSPEED,WIND_DIR,FP2,False,0,0,0)
+  Average(1,BATTERY_V,FP2,0)
+  Sample(1,AIR_150_diag,FP2)
+  Sample(1,AIR_250_diag,FP2)
+  Sample(1,SNOW_diag,FP2)
+  Maximum (1,AIR_150,FP2,False,False)
+  Maximum (1,AIR_250,FP2,False,False)
+  Maximum (1,AIR_350,FP2,False,False)
+  Maximum (1,ASP_350,FP2,False,False)
+  Maximum (1,AIR_450,FP2,False,False)
+  Maximum(1,DEWPT150,FP2,False,False)
+  Maximum(1,DEWPT450,FP2,False,False)
+  Minimum (1,AIR_150,FP2,False,False)
+  Minimum (1,AIR_250,FP2,False,False)
+  Minimum (1,AIR_350,FP2,False,False)
+  Minimum (1,ASP_350,FP2,False,False)
+  Minimum (1,AIR_450,FP2,False,False)
+  Minimum(1,DEWPT150,FP2,False,False)
+  Minimum(1,DEWPT450,FP2,False,False)
+  Maximum (1,WINDSPEED,FP2,False,False)
+  
+EndTable
+
+'\\\\\\\\\\\\\\\\\\\\\\\\\ SUBROUTINES //////////////////////////
+
+
+'\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
+
+BeginProg
+  Scan(15,Sec, 3, 0)
+'
+'PART 1: MEASURE SENSORS
+'
+'MEASURE 1.5M & 4.5M HMP45C'S
+PortSet(1,1)
+Delay(0,150,mSec)
+VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,0.1,-40)
+VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,0.1,0)
+VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,0.1,-40)
+VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,0.1,0)
+PortSet(1,0)
+'
+'MEASURE 4 SOIL TEMPS
+Therm107(SOILT,4,9,VX1,0,_60Hz,1,0)
+'
+'MEASURE FOUR WATER CONTENT REFLECTOMETERS
+PortSet(4, 1)              
+PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,0.001,0)
+PortSet(4, 0)
+'
+'MEASURE PYRANOMETER
+VoltDiff(SOLAR_Wm2,1,mV50,9,true,0,_60Hz,84.274,0)
+'
+'MEASURE SNOW PILLOW
+BrFull(SNOW_PILL,1,mV20,10,VX2,1,1524,true,true,0,_60Hz,714.52,0)
+'
+'MEASURE WIND SPEED
+PulseCount(WINDSPEED,1,1,1,1,0.098,0)
+'
+'MEASURE WIND DIRECTION
+BrHalf(WIND_DIR,1,mv5000,21,VX3,1,5000,True,0,_60Hz,355,0)
+'
+'MEASURE 2.5M AIR TEMP
+Therm107(AIR_250,1,22,VX4,0,_60Hz,1,0)
+'
+'MEASURE 3.5M AIR TEMP
+Therm107(AIR_350,1,23,VX4,0,_60Hz,1,0)
+'
+'MEASURE 3.5M ASPIRATED AIR TEMP
+Therm107(ASP_350,1,24,VX4,0,_60Hz,1,0)
+'
+'MEASURE SR50A SNOW DEPTH SENSOR
+SDI12Recorder(SR50(),3,0,"M1!",1,0)
+'
+'MEASURE BATTERY VOLTAGE
+Battery(BATTERY_V)
+'
+'PART2: PROCESS DATA
+'
+'SET RH TO 100% IF GREATER THAN 100%
+If RH_150>100 AND RH_150<108 Then RH_150=100
+If RH_450>100 AND RH_450<108 Then RH_450=100
+'
+'COMPUTE 1.5M & 4.5M DEWPOINT
+DewPoint(DEWPT150,AIR_150,RH_150)
+DewPoint(DEWPT450,AIR_450,RH_450)
+'
+'CONVERT WCR PERIOD TO WATER CONTENT
+WCRWC_10=-0.187+0.037*WCRPA_10+0.335*WCRPA_10^2+0*WCRPA_10^3+0*WCRPA_10^4+0*WCRPA_10^5
+WCRWC_20=-0.187+0.037*WCRPA_20+0.335*WCRPA_20^2+0*WCRPA_20^3+0*WCRPA_20^4+0*WCRPA_20^5
+WCRWC_50=-0.187+0.037*WCRPA_50+0.335*WCRPA_50^2+0*WCRPA_50^3+0*WCRPA_50^4+0*WCRPA_50^5
+WCRWC_100=-0.187+0.037*WCRPA_100+0.335*WCRPA_100^2+0*WCRPA_100^3+0*WCRPA_100^4+0*WCRPA_100^5
+'
+'SET SOLAR RADIATION TO 0 IF LESS THAN 0
+If (SOLAR_Wm2 < 0) Then                                  
+  SOLAR_Wm2 = 0
+EndIf
+'
+'
+'SUBTRACT TARE FOR SNOW PILLOW
+SNOW_PILL = SNOW_PILL - SNOW_TARE
+'
+'CORRECT WIND DIRECTION MEASUREMENT
+If WIND_DIR>360 Then WIND_DIR=0
+If WIND_DIR<0 Then WIND_DIR=0
+
+'CORRECT SNOW DEPTH MEASUREMENT
+TEMP_CORR_DISTANCE=RAW_DIST*(SQR((AIR_450+273.15)/273.15))
+SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+
+'PART 3: OUTPUT DATA
+'
+'SET LOGGERID TO 231
+LOGGERID = LID
+'
+'RECORD THE SIGNATURE AS PROGID
+    If  TimeInToInterval(0,1,Min) Then                             
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+'
+'5 MINUTE OUTPUT
+    CallTable Table105 
+  NextScan
+EndProg

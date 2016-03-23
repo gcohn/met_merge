@@ -1,0 +1,220 @@
+'CR1000 Series Datalogger
+'Program for CR1000 datalogger on Vanmet tower.  Measures NR01, Gill Windobserver II
+'sonic anamometer.   
+' Version 1 Written by John Moreau on 9-4-13.
+' Version 2 Created 1/14/2016 AK
+  ' Changed  TableFile("USB:VAN_232_snc_avg",8,-1,0,0,Hr,0,0) to 
+  ' TableFile("CRD:VAN_232_snc_avg_",64,-1,0,1,Day,0,0) and 
+  ' TableFile("USB:VAN_232_rad_temp_avg",8,-1,0,0,Hr,0,0) to
+  ' TableFile("CRD:VAN_232_rad_temp_avg_",64,-1,0,1,Day,0,0)
+
+Const SCAN_INTERVAL      = 1     'Scan interval in Sec for sonic
+Const SCAN_INTERVAL_SLOW = 10    'Scan interval in Sec for NR01
+Const OUTPUT_INTERVAL    = 5     'Output interval in minutes.
+Const LID                = 232
+
+' Gill Wind Observer II
+Public sncstring As String * 60
+Public sncstring_bytes
+Public snc(5)
+Alias snc(1)  =  Ux    ' positive for S-->N
+Alias snc(2)  =  Uy    ' positive for E-->W
+Alias snc(3)  =  unit As String * 1
+Alias snc(4)  =  Ts    ' in deg C
+Alias snc(5)  =  diag
+Public stat_flag
+Public Vh
+Public diag_flag
+Public nan_flag
+Public strtosend
+
+Units Ux   = [m s-1]
+Units Uy   = [m s-1]
+Units Ts   = [deg C]
+Units diag = [1]
+Units Vh   = [m s-1]
+
+Public PTemp, batt_volt
+
+Units PTemp     = [deg C]
+Units batt_volt = [V]
+
+Dim n = {1}    ' Counter for stats
+'Declare Other Variables 
+Public SR01Up
+Public SR01Dn
+Public IR01Up
+Public IR01Dn
+Public NR01TC
+Public NR01TK
+Public NetRs
+Public NetRl
+Public Albedo
+Public UpTot
+Public DnTot
+Public NetTot
+Public IR01UpCo
+Public IR01DnCo
+Public LOGGERID
+Public PROGID
+
+Units SR01Up    =[W m-2]
+Units SR01Dn    =[W m-2]
+Units IR01Up    =[W m-2]
+Units IR01Dn    =[W m-2]
+Units NR01TC    =[deg C]
+Units NR01TK    =[K]
+Units NetRs     =[W m-2]
+Units NetRl     =[W m-2]
+Units Albedo    =[W m-2]
+Units UpTot     =[W m-2]
+Units DnTot     =[W m-2]
+Units NetTot    =[W m-2]
+Units IR01UpCo  =[W m-2]
+Units IR01DnCo  =[W m-2]
+Units LOGGERID  = number
+Units PROGID    = number
+
+' Hukseflux NR01 4-component net radiometer Sensitivity uV/W/m2 SN# 1456
+'Pyranometer UP SR01          14.13
+'Pyranometer DOWN SR01          14.50
+'Pygreometer UP IR01          8.30
+'Pygreometer DOWN IR01          7.77
+
+'Load four calibration coefficients (1000/Sensitivity)
+Const SR01Upcal   =70.77
+Const SR01Downcal =68.97
+Const IR01Upcal   =120.48
+Const IR01Downcal =128.70
+
+DataTable (snc_avg,1,-1)
+  TableFile("CRD:VAN_232_snc_avg_",64,-1,0,1,Day,0,0)
+	DataInterval (0,OUTPUT_INTERVAL,Min,6)
+  Sample(1, LOGGERID, FP2)
+  Sample(1, PROGID, FP2)
+	Totalize (1,n,FP2,False)
+	FieldNames ("N_samples")
+	Totalize (1,n,FP2,diag<>0)
+	FieldNames ("N_samples_good")
+	Maximum (1,diag,FP2,diag_flag,false)
+	Minimum (1,sncstring_bytes,FP2,False,False)
+	Average (2,snc(1),FP2,stat_flag)
+	Average (1,snc(4),FP2,stat_flag)
+	StdDev (2,snc(1),FP2,stat_flag)
+	StdDev (1,snc(4),FP2,stat_flag)
+	WindVector (1,Uy,-Ux,FP2,stat_flag,SCAN_INTERVAL*60*OUTPUT_INTERVAL/6,1,0) ' - Ux because Ux is positive for S--> N; 150=avg of 4 subperiods of 150 sec each is output
+	FieldNames ("SPD_mean,DIR_mean,DIR_std")
+	Maximum (1,Vh,FP2,stat_flag,False)
+	FieldNames ("SPD_Gust_max")
+EndTable
+
+DataTable (rad_temp_avg,True,-1)
+  TableFile("CRD:VAN_232_rad_temp_avg_",64,-1,0,1,Day,0,0)
+	DataInterval (0,OUTPUT_INTERVAL,Min,6)
+  Sample(1, LOGGERID, FP2)
+  Sample(1, PROGID, FP2)
+  Average(1,SR01Up,FP2,False)
+  Average(1,SR01Dn,FP2,False) 
+  Average(1,IR01UpCo,FP2,False)
+  Average(1,IR01DnCo,FP2,False)
+  Average(1,NetTot,FP2,False)
+  Average(1,IR01Up,FP2,False)
+  Average(1,IR01Dn,FP2,False)
+  Average(1,NR01TC,FP2,False)
+  Average(1,NR01TK,FP2,False)
+  Average(1,NetRs,FP2,False)
+  Average(1,NetRl,FP2,False)
+  Average(1,Albedo,FP2,False)
+  Average(1,UpTot,FP2,False)
+  Average(1,DnTot,FP2,False)
+	Minimum (1,batt_volt,FP2,0,False)
+	Average (1,PTemp,FP2,False)   
+EndTable
+
+'Main Program
+BeginProg
+  SW12 (0)
+  Delay (1,5,Sec)
+  SW12 (1)
+  SerialOpen (Com1,9600,16,0,100)'opens serial communications with Gill sonic: normal string is 37 bytes long;
+	SerialFlush(Com1)
+	Delay (1,5,Sec)
+	nan_flag = 0
+	Scan (SCAN_INTERVAL,Sec,0,0)
+		'Enter other measurement instructions
+		' Sample the Gill Wind Observer II
+		'Poll the sonic data
+		 'SerialOutBlock (Com1,"?A",2)
+		 'Delay (2,5,mSec)
+		 ' Get data from sonic
+		 SerialInRecord (Com1,sncstring,0,0,0,sncstring_bytes,01)
+		 Delay (1,10,mSec) ' Wait unitl full string is received
+		 ' Process the received string
+     SplitStr (snc(1),sncstring,",",5,4)
+     ' Flush string memory
+     SerialFlush (Com1)
+     ' Set flag to include only non-NaN data into 
+     If diag = NaN Then 
+       diag_flag = 1 
+       stat_flag = 1
+       nan_flag = nan_flag + 1
+     ElseIf diag <> 0 
+       diag_flag = 0
+       stat_flag = 1
+     ElseIf Ux = NaN OR Uy = NaN OR Ts = NaN
+       diag_flag = 0
+       stat_flag = 1
+       nan_flag = nan_flag + 1
+     Else
+       diag_flag = 0
+       stat_flag = 0
+       nan_flag = 0
+     EndIf
+     Vh  =  SQR(Ux^2+Uy^2)
+     ' Delay sequence and flus buffer if too many NaNs are received
+     If nan_flag > 1 Then
+       SW12 (0)
+       Delay (1,5,Sec)
+       SW12 (1)
+       SerialClose (Com1)
+       Delay (1,5,Sec)
+       SerialOpen (Com1,9600,16,0,100) 'opens serial communications with Gill sonic: normal string is 37 bytes long;
+       SerialFlush (Com1)
+       nan_flag = 0
+     endif
+		'Call Output Tables
+'SET LOGGERID TO 232
+    LOGGERID = LID
+'RECORD THE SIGNATURE AS PROGID
+    If  TimeInToInterval(0,1,Min) Then                             
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+'		CallTable snc_ts
+		CallTable snc_avg
+	NextScan
+	
+	SlowSequence 
+  Scan (SCAN_INTERVAL_SLOW,Sec,0,0)
+    PanelTemp (PTemp,250)
+		Battery (Batt_volt)
+		VoltDiff(SR01Up,1,autorange,1,True,0,_50hz,SR01Upcal,0)
+		VoltDiff(SR01Dn,1,autorange,2,True,0,_50hz,SR01Downcal,0)
+		VoltDiff(IR01Up,1,mV7_5,3,True,0,_50hz,IR01Upcal,0)
+		VoltDiff(IR01Dn,1,mV7_5,4,True,0,_50hz,IR01Downcal,0)
+		BrHalf4W(NR01TC,1,mV25,mV25,5,Vx1,1,2100,True,True,0,250,1.0,0)
+		PRT(NR01TC,1,NR01TC,1,0)
+		NR01TK=NR01TC+273.15
+		NetRs=SR01Up-SR01Dn
+		NetRl=IR01Up-IR01Dn
+		Albedo=SR01Dn/SR01Up
+	  IR01UpCo=IR01Up+5.67*10^-8*NR01TK^4
+		IR01DnCo=IR01Dn+5.67*10^-8*NR01TK^4
+		UpTot=SR01Up+IR01UpCo
+		DnTot=SR01Dn+IR01DnCo
+		NetTot=UpTot-DnTot
+		CallTable(rad_temp_avg)
+ 
+  NextScan
+	
+EndProg
+
