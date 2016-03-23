@@ -52,6 +52,7 @@ Public PROGID as Long
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
 Public SNOW_diag=1 '1 = snow present; 0=snow absent
+Public PROG_VERS = 7
 
 Alias HMP_150(1) = AIR_150
 Alias HMP_150(2) = RH_150
@@ -71,7 +72,7 @@ Alias WCRPA(1)   = WCRPA_10
 Alias WCRPA(2)   = WCRPA_20
 Alias WCRPA(3)   = WCRPA_50
 Alias WCRPA(4)   = WCRPA_100
-Alias SR50(1)    = RAW_DIST
+Alias SR50(1)    = SNOW_RAW_DIST
 Alias SR50(2)    = QUALITY
 
 Units AIR_150         = deg C
@@ -108,7 +109,60 @@ Units PROGID          = number
 Units AIR_150_diag    = number
 Units AIR_250_diag    = number
 Units SNOW_diag       = number
+
+
+'SYSTEM Diagnostics
+'#######################################################
+'SYS Table variables
+Dim SNOW_DIST_CORRECTION
+Dim SWE_RAW
+Dim SNOW_INITIAL_DISTANCE
+Dim SNOW_AIR_TEMP
+
+Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
+Alias SNOW_TARE = SWE_TARE
+
+'COEF defenitions
+Public coef_AIR_150 = 0.1
+Public offset_AIR_150 = -40
+Public coef_RH_150 = 0.1
+Public coef_AIR_450 = 0.1
+Public offset_AIR_450 = -40
+Public coef_RH_450 = 0.1
+Public coef_WCRPA = 0.001
+Public coef_SOLAR_Wm2 = 84.274
+Public coef_SWE = 714.52
+Public coef_WINDSPEED = 0.098
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:VAN_231_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample (1,SNOW_INITIAL_DISTANCE,FP2)
+  Sample(1,SNOW_RAW_DIST,FP2)
+  Sample(1,SNOW_DIST_CORRECTION,FP2)
+  Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
+  Sample(1,SNOW_AIR_TEMP,FP2)
+  Sample(1,SWE_RAW,FP2)
+  Sample(1,SWE_TARE,FP2)
+  Sample(1,WCRPA_10,FP2)
+  Sample(1,WCRPA_20,FP2)
+  Sample(1,WCRPA_50,FP2)
+  Sample(1,WCRPA_100,FP2)  
+  Sample(1,coef_SWE,FP2)
+  Sample(1,coef_AIR_150,FP2)
+  Sample(1,coef_AIR_450,FP2)
+  Sample(1,offset_AIR_150,FP2)
+  Sample(1,offset_AIR_450,FP2)
+  Sample(1,coef_RH_150,FP2)
+  Sample(1,coef_RH_450,FP2)
+  Sample(1,coef_WCRPA,FP2)
+  Sample(1,coef_WINDSPEED,FP2)
+EndTable
 '
+'\\\\\\\\\\\\\\\\\\\\\\\\PROGRAM OUTPUT////////////////////////
 '5 MINUTE OUTPUT
 DataTable(Table105,true,-1)
   TableFile("CRD:VAN_231_Table105",64,-1,0,1,Day,0,0)    
@@ -155,12 +209,11 @@ DataTable(Table105,true,-1)
   
 EndTable
 
-'\\\\\\\\\\\\\\\\\\\\\\\\\ SUBROUTINES //////////////////////////
-
-
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 
 BeginProg
+  SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
+  SNOW_AIR_TEMP = AIR_450
   Scan(15,Sec, 3, 0)
 '
 'PART 1: MEASURE SENSORS
@@ -168,10 +221,10 @@ BeginProg
 'MEASURE 1.5M & 4.5M HMP45C'S
 PortSet(1,1)
 Delay(0,150,mSec)
-VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,0.1,-40)
-VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,0.1,0)
-VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,0.1,-40)
-VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,0.1,0)
+VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,coef_AIR_150,offset_AIR_150)
+VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,coef_RH_150,0)
+VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,coef_AIR_450,offset_AIR_450)
+VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,coef_RH_450,0)
 PortSet(1,0)
 '
 'MEASURE 4 SOIL TEMPS
@@ -179,17 +232,17 @@ Therm107(SOILT,4,9,VX1,0,_60Hz,1,0)
 '
 'MEASURE FOUR WATER CONTENT REFLECTOMETERS
 PortSet(4, 1)              
-PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,0.001,0)
+PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,coef_WCRPA,0)
 PortSet(4, 0)
 '
 'MEASURE PYRANOMETER
-VoltDiff(SOLAR_Wm2,1,mV50,9,true,0,_60Hz,84.274,0)
+VoltDiff(SOLAR_Wm2,1,mV50,9,true,0,_60Hz,coef_SOLAR_Wm2,0)
 '
 'MEASURE SNOW PILLOW
-BrFull(SNOW_PILL,1,mV20,10,VX2,1,1524,true,true,0,_60Hz,714.52,0)
+BrFull(SNOW_PILL,1,mV20,10,VX2,1,1524,true,true,0,_60Hz,coef_SWE,0)
 '
 'MEASURE WIND SPEED
-PulseCount(WINDSPEED,1,1,1,1,0.098,0)
+PulseCount(WINDSPEED,1,1,1,1,coef_WINDSPEED,0)
 '
 'MEASURE WIND DIRECTION
 BrHalf(WIND_DIR,1,mv5000,21,VX3,1,5000,True,0,_60Hz,355,0)
@@ -232,6 +285,7 @@ EndIf
 '
 '
 'SUBTRACT TARE FOR SNOW PILLOW
+SWE_RAW = SNOW_PILL
 SNOW_PILL = SNOW_PILL - SNOW_TARE
 '
 'CORRECT WIND DIRECTION MEASUREMENT
@@ -239,7 +293,8 @@ If WIND_DIR>360 Then WIND_DIR=0
 If WIND_DIR<0 Then WIND_DIR=0
 
 'CORRECT SNOW DEPTH MEASUREMENT
-TEMP_CORR_DISTANCE=RAW_DIST*(SQR((AIR_450+273.15)/273.15))
+SNOW_DIST_CORRECTION = (SQR((AIR_450+273.15)/273.15))
+TEMP_CORR_DISTANCE = SNOW_RAW_DIST*SNOW_DIST_CORRECTION
 SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
 
 'PART 3: OUTPUT DATA
@@ -248,11 +303,12 @@ SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
 LOGGERID = LID
 '
 'RECORD THE SIGNATURE AS PROGID
-    If  TimeInToInterval(0,1,Min) Then                             
+    If  TimeIntoInterval(0,1,Min) Then                             
       PROGID=Status.ProgSignature(1,1)
     EndIf
 '
 '5 MINUTE OUTPUT
     CallTable Table105 
+    CallTable SYS
   NextScan
 EndProg
