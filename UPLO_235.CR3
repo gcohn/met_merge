@@ -1,6 +1,5 @@
 'Program name: UPLO_235_V06.CR3
 '
-
 ' Version 1 written: 9-11-15 by JM & SW  
 ' Version 2 created on 9-11-15
 	' A. Changes 1.5M & 4.5M HMP45C programing from SW12v to C5.
@@ -422,6 +421,6 @@ BeginProg
     '5 MINUTE OUTPUT
     CallTable Table105
     CallTable CONT
-	CallTable SYS
+	  CallTable SYS
   NextScan
 EndProg
