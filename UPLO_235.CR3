@@ -144,9 +144,8 @@ Units CON_TIME_ON = seconds
 Dim LogNow = false
 
 'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,true,-1)
+DataTable(CONT,LogNow=true,-1)
   TableFile("CRD:UPLO_235_CONT_",64,-1,0,1,Day,0,0) 
-  DataInterval(0,5,Min,10)
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
   Sample (1,PROG_VERS,FP2)
@@ -279,6 +278,7 @@ BeginProg
     '#############################################################
     ' CHECK ORIFIC TEMPERATURE 
     ' pump on at low temp
+	  LogNow = false
     If (SA_TEMP < CON_TEMP) Then                      
       CON_PUMP = true
     EndIf
@@ -300,11 +300,13 @@ BeginProg
     ' Take action
     PortGet(PUMP_ON,8)
     If (CON_PUMP = true AND PUMP_ON = 0 ) Then
-      PortSet(8,1)
+      LogNow = true
+	    PortSet(8,1)
       Timer(1,Sec,2)
       Timer(2,Sec,3)
     EndIf
     If (CON_PUMP = false AND PUMP_ON = 1) Then
+      LogNow = true
       PortSet(8,0)
       Timer(1,Sec,3)
       Timer(2,Sec,2)
