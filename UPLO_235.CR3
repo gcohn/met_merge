@@ -1,4 +1,4 @@
-'Program name: UPLO_235_V03.CR3
+'Program name: UPLO_235_V06.CR3
 '
 
 ' Version 1 written: 9-11-15 by JM & SW  
@@ -160,6 +160,44 @@ DataTable(CONT,LogNow=true,-1)
   Sample (1,CON_TIME_OFF,Long)
 EndTable
 
+'SYSTEM Diagnostics
+'#######################################################
+'SYS Table variables
+
+'COEF defenitions
+Public coef_WINDSPEED = 0.098
+Public coef_AIR_150 = 0.1
+Public offset_AIR_150 = -40
+Public coef_AIR_450 = 0.1
+Public offset_AIR_450 = -40
+Public coef_RH_150 = 0.1
+Public coef_RH_450 = 0.1
+Public coef_WCRPA = 0.001
+Public coef_SA_PRECIP = 3.7160
+Public offset_SA_PRECIP = -184.31
+
+DataTable(SYS,true,-1)
+  TableFile("CRD:CENT_233_SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample(1,coef_WINDSPEED,FP2)
+  Sample(1,coef_AIR_150,FP2)
+  Sample(1,coef_AIR_450,FP2)
+  Sample(1,offset_AIR_150,FP2)
+  Sample(1,offset_AIR_450,FP2)
+  Sample(1,coef_RH_150,FP2)
+  Sample(1,coef_RH_450,FP2)
+  Sample(1,coef_WCRPA,FP2)
+  Sample(1,coef_SA_PRECIP,FP2)
+  Sample(1,offset_SA_PRECIP,FP2)
+  Sample(1,WCRPA_10,FP2)
+  Sample(1,WCRPA_20,FP2)
+  Sample(1,WCRPA_50,FP2)
+  Sample(1,WCRPA_100,FP2)
+EndTable
+
 '\\\\\\\\\\\\\\\\\\\\\\\\ OUTPUT SECTION ////////////////////////
 '
 '5 MINUTE OUTPUT
@@ -316,10 +354,10 @@ BeginProg
     'MEASURE 1.5M & 4.5M HMP45C'S
     PortSet(5,1)
     Delay(0,150,mSec)
-    VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,0.1,-40)
-    VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,0.1,0)
-    VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,0.1,-40)
-    VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,0.1,0)
+    VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,coef_AIR_150,offset_AIR_150)
+    VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,coef_RH_150,0)
+    VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,coef_AIR_450,offset_AIR_450)
+    VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,coef_RH_450,0)
     PortSet(5,1)
     '
     'MEASURE 4 SOIL TEMPS
@@ -327,7 +365,7 @@ BeginProg
     '
     'MEASURE FOUR WATER CONTENT REFLECTOMETERS
     PortSet(4,1)
-    PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,0.001,0)
+    PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,coef_WCRPA,0)
     PortSet(4,0)
     '
     'MEASURE WIND DIRECTION
@@ -346,7 +384,7 @@ BeginProg
     Therm107(SA_TEMP,1,21,VX4,0,_60HZ,1,0)
     '
     'MEASURE STAND ALONE RAIN GAGE FLOAT  
-    VoltDiff(SA_PRECIP,1,mV200,12,True,0,_60Hz,3.7160,-184.31)
+    VoltDiff(SA_PRECIP,1,mV200,12,True,0,_60Hz,coef_SA_PRECIP,offset_SA_PRECIP)
     '
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
@@ -384,5 +422,6 @@ BeginProg
     '5 MINUTE OUTPUT
     CallTable Table105
     CallTable CONT
+	CallTable SYS
   NextScan
 EndProg
