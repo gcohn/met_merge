@@ -12,6 +12,9 @@
 ' Version 3 Created on 2/21/16 by GC
   ' Add decimal subversionioning: 03 is VAN232 program version; 
   ' 1 is a unified VANILLA site program version.
+' Version 3.2 Created on 4/20/16 by GC
+  ' At full check, observed invalid progid
+  ' Edited and installed PROG_ID as Long
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -35,7 +38,7 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
-Public PROG_VERS = 3.1
+Public PROG_VERS = 3.2
 
 Units Ux   = [m s-1]
 Units Uy   = [m s-1]
@@ -65,7 +68,7 @@ Public NetTot
 Public IR01UpCo
 Public IR01DnCo
 Public LOGGERID
-Public PROGID
+Public PROGID As Long
 
 Units SR01Up    =[W m-2]
 Units SR01Dn    =[W m-2]
@@ -100,7 +103,7 @@ DataTable (snc_avg,1,-1)
   TableFile("CRD:VAN_232_snc_avg_",64,-1,0,1,Day,0,0)
 	DataInterval (0,OUTPUT_INTERVAL,Min,6)
   Sample(1, LOGGERID, FP2)
-  Sample(1, PROGID, FP2)
+  Sample(1, PROGID, Long)
 	Totalize (1,n,FP2,False)
 	FieldNames ("N_samples")
 	Totalize (1,n,FP2,diag<>0)
@@ -121,7 +124,7 @@ DataTable (rad_temp_avg,True,-1)
   TableFile("CRD:VAN_232_rad_temp_avg_",64,-1,0,1,Day,0,0)
 	DataInterval (0,OUTPUT_INTERVAL,Min,6)
   Sample(1, LOGGERID, FP2)
-  Sample(1, PROGID, FP2)
+  Sample(1, PROGID, Long)
   Average(1,SR01Up,FP2,False)
   Average(1,SR01Dn,FP2,False) 
   Average(1,IR01UpCo,FP2,False)
