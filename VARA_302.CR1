@@ -1,5 +1,5 @@
 ' CR1000 Series Datalogger
-' Program name: VARA_302_V16.1.CR1
+' Program name: VARA_302_V16.2.CR1
 ' Program for standalone raing gauge and associated sensors at VARA
 '
 ' Version 11 Created on 7-15-15 FOR UPGRADE FROM CR10X DATALOGGER TO CR1000
@@ -26,6 +26,10 @@
 	  '	SYS table standardized on 3/23/16
 	  ' CONT table corrections made on 3/23/16
 	  ' Add decimal subversionioning: 16 is VARA program version; 1 is a unified site program version.
+' Version 16.2 Created May 2016 by GC
+     ' Error in VAN_232_V03.1 Logger ID. Upgrade site to Version x.2
+     ' Error in VARA_302_V16.1 output of AIR450 was halted due to alias
+     ' Both errors are corrected in version x.2 (VARA v16.2; VAN v3.2)
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -45,7 +49,7 @@ Public TEMP_CORR_DISTANCE
 Public SNOWDEPTH
 Public BATTERY_V
 Public OR_PRECIP
-Public PROG_VERS=16.1
+Public PROG_VERS=16.2
 Public SNOW_TARE = 10
 
 
@@ -115,9 +119,9 @@ EndTable
 Dim SNOW_DIST_CORRECTION
 Dim  SWE_RAW
 Dim SNOW_INITIAL_DISTANCE
+Dim SNOW_AIR_TEMP
 
 Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
-Alias AIR_450= SNOW_AIR_TEMP
 Alias SNOW_TARE = SWE_TARE
 
 'COEF defenitions
@@ -218,6 +222,7 @@ BeginProg
     '
     'MEASURE 4.5M AIR TEMP
     Therm107 (AIR_450,1,4,Vx2,0,_60Hz,1.0,0)
+    SNOW_AIR_TEMP = AIR_450
     '
     'MEASURE PUMPVOLTS
     VoltDiff (PUMPVOLTS,1,mV2500,3,True,0,_60Hz,0.01,0)
