@@ -85,8 +85,8 @@ Public CON_TIME_ON = 1209600
 Public CON_TIME
 Public CON_PUMP
 Public PUMP_ON
+Dim SA_TEMP
 
-Alias OR_TEMP = SA_TEMP
 Alias OR_RUN_TIME = SA_RUN_TIME
 Alias OR_OFF_TIME = SA_OFF_TIME
 
@@ -179,6 +179,7 @@ BeginProg
     '#############################################################
     ' CHECK ORIFIC TEMPERATURE 
     ' pump on at low temp
+    SA_TEMP = OR_TEMP
     LogNow = false
     If (OR_TEMP < CON_TEMP) Then                      
       CON_PUMP = true
