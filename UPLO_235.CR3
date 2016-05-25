@@ -1,4 +1,4 @@
-'Program name: UPLO_235_V06.CR3
+'Program name: UPLO_235_V07.CR3
 '
 ' Version 1 written: 9-11-15 by JM & SW  
 ' Version 2 created on 9-11-15
@@ -25,6 +25,10 @@
 ' Version 6 Create 3/23/16 by GC
 	' Standardize formatting with other benchmark Met stations
 	' Add calibration coefficients and offsets to SYS table
+' Version 7 Created 5/25/16 by GC
+  ' Added panel temp to verify logger function
+  ' AK renamed output file name
+  ' Changed order of Public Table
 
 Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
@@ -32,7 +36,12 @@ Const OUTPUT_INTERVAL    = 5   'Output interval in minutes
 Const LID                = 235
 
 '\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
-
+Public LOGGERID
+Public PROGID As Long
+Public PROG_VERS=7
+Public REF_TEMP
+Public BATTERY_V
+Public SA_PRECIP
 Public HMP_150(3) As Float
 Public HMP_450(3) As Float
 Public AIR_250
@@ -42,9 +51,6 @@ Public SOILT(4)
 Public WCRWC(4)
 Public WINDSPEED
 Public WIND_DIR
-Public BATTERY_V
-Public SA_PRECIP
-Public PROG_VERS=6
 Public WCRPA(4)
 Public sncstring As String * 60
 Public sncstring_bytes
@@ -54,8 +60,6 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
-Public LOGGERID
-Public PROGID As Long
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
 
@@ -387,6 +391,9 @@ BeginProg
     '
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
+    '
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
     '
     'PART2: PROCESS DATA
     '

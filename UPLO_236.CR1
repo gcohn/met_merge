@@ -1,5 +1,5 @@
 ' CR1000 Series Datalogger
-' Program name: UPLO_236_V06.CR1
+' Program name: UPLO_236_V07.CR1
 '
 ' Version 1 Created on 9-15-15 by JM
 ' Version 2 Modified on 11-23-15 by JM,SW & AK
@@ -17,6 +17,10 @@
 ' Version 6 Create 3/23/16 by GC
 	' Standardize formatting with other benchmark Met stations
 	' Add calibration coefficients and offsets to SYS table
+' Version 7 Created 5/25/16 by GC
+  ' Added panel temp to verify logger function
+  ' AK renamed output file name
+  ' Changed order of Public Table
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
@@ -27,6 +31,9 @@ Const INITIAL_DISTANCE = 5.6
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
+Public PROG_VERS = 7
+Public BATTERY_V
+Public REF_TEMP
 Public SH_PRECIP
 Public SH_TEMP
 Public CS451(2)
@@ -39,8 +46,7 @@ Public AIR_TEMP
 Public SNOWDEPTH
 Public SOLAR_Wm2
 Public BP_mb
-Public BATTERY_V
-Public PROG_VERS = 6
+
 
 'Alias
 Alias SR50(1)= SNOW_RAW_DIST
@@ -162,6 +168,9 @@ BeginProg
     '
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
+    '
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
     '
     'PROCESS DATA
     '
