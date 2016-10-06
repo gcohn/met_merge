@@ -34,33 +34,40 @@
 '////////////////////////////////////////////////////         
 'Declare Constant Variable    
 Const LID              = 231
-Const INITIAL_DISTANCE = 5.03
 
 'Declare Public Variable 
+Public LOGGERID
+Public PROGID as Long
+Public PROG_VERS = 8.1
+Public BATTERY_V
+
 Public HMP_150(3) As Float
 Public HMP_450(3) As Float
 Public AIR_250
 Public AIR_350
 Public ASP_350
+
 Public SOILT(4)
 Public WCRWC(4)
-Public SOLAR_Wm2
-Public SNOW_PILL
+Public WCRPA(4)
+
+
 Public WINDSPEED
 Public WIND_DIR
+
 Public SR50(2)
 Public TEMP_CORR_DISTANCE
+Public SNOW_INITIAL_DISTANCE = 5.03
 Public SNOWDEPTH
-Public BATTERY_V
+Public SNOW_PILL
 Public SNOW_TARE
-Public WCRPA(4)
-Public SOLARMULT
-Public LOGGERID
-Public PROGID as Long
+
+Public SOLAR_Wm2
+
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
 Public SNOW_diag=1 '1 = snow present; 0=snow absent
-Public PROG_VERS = 8.1
+
 
 Alias HMP_150(1) = AIR_150
 Alias HMP_150(2) = RH_150
@@ -111,7 +118,6 @@ Units WIND_DIR        = degrees
 Units SNOWDEPTH       = meters
 Units BATTERY_V       = volts
 Units SNOW_TARE       = number
-Units SOLARMULT       = number
 Units LOGGERID        = number
 Units PROGID          = number
 Units AIR_150_diag    = number
@@ -124,7 +130,6 @@ Units SNOW_diag       = number
 'SYS Table variables
 Dim SNOW_DIST_CORRECTION
 Dim SWE_RAW
-Dim SNOW_INITIAL_DISTANCE
 Dim SNOW_AIR_TEMP
 
 Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
@@ -220,7 +225,6 @@ EndTable
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 
 BeginProg
-  SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
   SNOW_AIR_TEMP = AIR_450
   Scan(15,Sec, 3, 0)
     '
@@ -303,7 +307,7 @@ BeginProg
 	  'CORRECT SNOW DEPTH MEASUREMENT
 	  SNOW_DIST_CORRECTION = (SQR((AIR_450+273.15)/273.15))
 	  TEMP_CORR_DISTANCE = SNOW_RAW_DIST*SNOW_DIST_CORRECTION
-	  SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+	  SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
 	  
 	  'PART 3: OUTPUT DATA
 	  '
@@ -311,7 +315,7 @@ BeginProg
 	  LOGGERID = LID
 	  '
 	  'RECORD THE SIGNATURE AS PROGID
-	  If  TimeIntoInterval(0,1,Min) Then                             
+	  If  TimeIntoInterval(0,1,Min) Then
 		  PROGID=Status.ProgSignature(1,1)
 		EndIf
 	  '
