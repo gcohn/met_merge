@@ -128,14 +128,19 @@ Units SNOW_diag       = number
 'SYSTEM Diagnostics
 '#######################################################
 'SYS Table variables
-Dim SNOW_DIST_CORRECTION
 Dim SWE_RAW
 Dim SNOW_AIR_TEMP
+Dim SNOW_DIST_CORRECTION
+Dim RH_150_RAW
+Dim RH_450_RAW
+Dim SOLAR_Wm2_RAW
+Public ASP_SPEED
 
 Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
 Alias SNOW_TARE = SWE_TARE
 
 'COEF defenitions
+Dim coef_ASP_SPEED
 Public coef_AIR_150 = 0.1
 Public offset_AIR_150 = -40
 Public coef_RH_150 = 0.1
@@ -159,7 +164,11 @@ DataTable(SYS,true,-1)
   Sample(1,SNOW_TEMP_CORR_DISTANCE,FP2)  
   Sample(1,SNOW_AIR_TEMP,FP2)
   Sample(1,SWE_RAW,FP2)
-  Sample(1,SWE_TARE,FP2)
+  Sample(1,SWE_TARE,FP2)  
+  Totalize(1,ASP_SPEED,Long,False)
+  Maximum(1, RH_150_RAW,FP2,False,0)
+  Maximum(1, RH_450_RAW,FP2,False,0)
+  Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
   Sample(1,WCRPA_10,FP2)
   Sample(1,WCRPA_20,FP2)
   Sample(1,WCRPA_50,FP2)
@@ -267,6 +276,9 @@ BeginProg
 	  '
 	  'MEASURE 3.5M ASPIRATED AIR TEMP
 	  Therm107(ASP_350,1,24,VX4,0,_60Hz,1,0)
+	  'MEASURE ASPIRATED FAN SPEED
+	  coef_ASP_SPEED = 1/15
+	  PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
 	  '
 	  'MEASURE SR50A SNOW DEPTH SENSOR
 	  SDI12Recorder(SR50(),3,0,"M1!",1,0)
@@ -277,7 +289,9 @@ BeginProg
 	  'PART2: PROCESS DATA
 	  '
 	  'SET RH TO 100% IF GREATER THAN 100%
+	  RH_150_RAW = RH_150
 	  If RH_150>100 AND RH_150<108 Then RH_150=100
+	  RH_450_RAW =  RH_450
 	  If RH_450>100 AND RH_450<108 Then RH_450=100
 	  '
 	  'COMPUTE 1.5M & 4.5M DEWPOINT
@@ -291,8 +305,9 @@ BeginProg
 	  WCRWC_100=-0.187+0.037*WCRPA_100+0.335*WCRPA_100^2+0*WCRPA_100^3+0*WCRPA_100^4+0*WCRPA_100^5
 	  '
 	  'SET SOLAR RADIATION TO 0 IF LESS THAN 0
+	  SOLAR_Wm2_RAW = SOLAR_Wm2
 	  If (SOLAR_Wm2 < 0) Then                                  
-		SOLAR_Wm2 = 0
+		  SOLAR_Wm2 = 0
 	  EndIf
 	  '
 	  '
