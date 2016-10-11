@@ -35,6 +35,9 @@
 'Declare Constant Variable    
 Const LID              = 231
 
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
+
 'Declare Public Variable 
 Public LOGGERID
 Public PROGID as Long
