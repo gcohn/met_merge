@@ -77,6 +77,38 @@ Units BATTERY_V       = volts
 Units SNOW_TARE       = number
 Units CON_TEMP        = number
 
+'POWER Status
+'#######################################################
+' Set power levels. Each level changes function
+Public BATT_CHRG_FULL =  12.4
+Public BATT_CHRG_LOW = 12.2
+Public BATT_CHRG_VERY_LOW = 12.0
+Public BATT_CHRG_EMPTY = 11.8
+
+' Set power to peripherals
+Public RADIO_PWR = True
+Public RADIO_INTVL_pblc = 4
+Dim RADIO_INTVL = 4*60
+Public RADIO_INTVL_mult = 1
+Public RADIO_INTVL_count = 1
+Public RADIO_TIME_SINCE_LAST
+Public PWR_AMP
+Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
+
+DataTable(PWR,true,-1)
+  TableFile("CRD:VAN_231_PWR_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Minimum(1,BATTERY_V,FP2,False,False)
+  Average(1,PWR_AMP,FP2,False)
+  Maximum(1,PWR_AMP,FP2,False,False)
+  Sample(1,RADIO_PWR,Boolean)  
+  Maximum(1,RADIO_INTVL,FP2,False,False)
+  Maximum(1,RADIO_INTVL_count,FP2,False,False)
+  Maximum (1,RADIO_INTVL_mult,FP2,False,False)
+EndTable
 
 'CONTROL PARAMETERS
 '#######################################################
@@ -235,7 +267,9 @@ BeginProg
     BrFull (SWE,1,mV25,4,Vx3,1,1524,True,True,0,_60Hz,coef_SWE, 0)    
     '
     'MEASURE SR50A SNOW DEPTH SENSOR
-    SDI12Recorder (SR50(),1,0,"M1!",1.0,0)
+    If  TimeIntoInterval(0,300,Sec) Then   
+        SDI12Recorder (SR50(),1,0,"M1!",1.0,0)
+    EndIf
     '
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
@@ -250,6 +284,54 @@ BeginProg
     'SUBTRACT TARE FOR SNOW PILLOW
     SWE_RAW = SWE
     SWE = SWE - SNOW_TARE
+	
+	' POWER CONTROLS
+	  '##########################################################
+	  'Reset telemetry counter at midnight
+	  If TimeIntoInterval(0,24,Hr) Then
+		  RADIO_INTVL_count = 0
+		  RADIO_INTVL = RADIO_INTVL_pblc*60
+	  EndIf
+	  
+	  If BATTERY_V > BATT_CHRG_FULL Then
+		  RADIO_INTVL_mult =  1
+		  RADIO_PWR = True
+		
+	  ElseIf BATTERY_V <= BATT_CHRG_FULL  AND BATTERY_V> BATT_CHRG_LOW Then
+		  RADIO_INTVL_mult = 2 
+		  RADIO_PWR = True
+		
+	  ElseIf BATTERY_V <= BATT_CHRG_LOW  AND BATTERY_V> BATT_CHRG_VERY_LOW Then
+		  RADIO_INTVL_mult = 3
+		  RADIO_PWR = True
+		
+	  ElseIf BATTERY_V <= BATT_CHRG_VERY_LOW  AND BATTERY_V> BATT_CHRG_EMPTY Then
+		  'If battery is very low, the radio will only transmit at 1600 (the counter 
+		  'is reset every night) 
+	    RADIO_INTVL = 16*60
+		  RADIO_INTVL_mult = 1
+		  RADIO_INTVL_count = 0
+		  RADIO_PWR = True
+		
+	  ElseIf BATTERY_V <= BATT_CHRG_EMPTY	
+		  RADIO_PWR = False
+	  EndIf
+		
+	  If TimeIsBetween(0,10,RADIO_INTVL, min) Then
+		  RADIO_INTVL_count += 1
+		  If RADIO_INTVL_count >= RADIO_INTVL_mult Then
+        SW12(RADIO_PWR)		 
+        EthernetPower(RADIO_PWR) 
+        RADIO_INTVL_count = 0
+        Timer (3,Min,2)
+		  EndIf
+	  Else
+		  ' Turn off radio the rest of the time
+		  SW12(False)
+		  EthernetPower(False)
+		  RADIO_TIME_SINCE_LAST = Timer(3,min,4)
+	  EndIf
+	  
     '
     'OUTPUT DATA
     '
@@ -265,6 +347,7 @@ BeginProg
     CallTable Table105
     CallTable CONT
     CallTable SYS
+    CallTable PWR
   NextScan
 EndProg
 
