@@ -35,21 +35,26 @@
 '////////////////////////////////////////////////////         
 'Declare Constant Variable
 Const LID              = 302
-Const INITIAL_DISTANCE = 5.60
+
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
 
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PRECIP
+Public PROG_VERS=16.2
+Public BATTERY_V
 Public PUMPVOLTS
+
+Public PRECIP
+
 Public AIR_450
-Public SWE
+
 Public SR50(2)
 Public TEMP_CORR_DISTANCE
+Public SNOW_INITIAL_DISTANCE = 5.60
 Public SNOWDEPTH
-Public BATTERY_V
-Public OR_PRECIP
-Public PROG_VERS=16.2
+Public SWE
 Public SNOW_TARE = 10
 
 
@@ -116,10 +121,9 @@ EndTable
 'SYSTEM Diagnostics
 '#######################################################
 'SYS Table variables
-Dim SNOW_DIST_CORRECTION
-Dim  SWE_RAW
-Dim SNOW_INITIAL_DISTANCE
+Dim SWE_RAW
 Dim SNOW_AIR_TEMP
+Dim SNOW_DIST_CORRECTION
 
 Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
 Alias SNOW_TARE = SWE_TARE
@@ -172,7 +176,6 @@ EndTable
 'Main Program
 '///////////////////////////////////////////////////////////////
 BeginProg
-  SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
   Timer(2,Sec,2)
   Scan (15,Sec,0,0)
     'PUMP CONTROL
@@ -242,7 +245,7 @@ BeginProg
     'CORRECT SNOW DEPTH MEASUREMENT
     SNOW_DIST_CORRECTION=(SQR((AIR_450+273.15)/273.15))
     TEMP_CORR_DISTANCE=SNOW_RAW_DIST*SNOW_DIST_CORRECTION
-    SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
     '
     'SUBTRACT TARE FOR SNOW PILLOW
     SWE_RAW = SWE
