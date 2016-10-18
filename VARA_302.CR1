@@ -100,7 +100,7 @@ Public PWR_AMP
 Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
 
 DataTable(PWR,true,-1)
-  TableFile("CRD:VAN_231_PWR_",64,-1,0,1,Day,0,0)
+  TableFile("CRD:VARA_302_PWR_",64,-1,0,1,Day,0,0)
   DataInterval(0,5,min,10)
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
