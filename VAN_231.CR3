@@ -137,9 +137,11 @@ Public BATT_CHRG_EMPTY = 11.8
 
 ' Set power to peripherals
 Public RADIO_PWR = True
-Public RADIO_INTVL = 4
+Public RADIO_INTVL_pblc = 4
+Dim RADIO_INTVL = 4*60
 Public RADIO_INTVL_mult = 1
 Public RADIO_INTVL_count = 1
+Public RADIO_TIME_SINCE_LAST
 Public ASP_PWR = True
 Public PWR_AMP
 Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
@@ -155,6 +157,7 @@ DataTable(PWR,true,-1)
   Maximum(1,PWR_AMP,FP2,False,False)
   Sample(1,ASP_PWR,Boolean)
   Sample(1,RADIO_PWR,Boolean)  
+  Maximum(1,RADIO_INTVL,FP2,False,False)
   Maximum(1,RADIO_INTVL_count,FP2,False,False)
   Maximum (1,RADIO_INTVL_mult,FP2,False,False)
 EndTable
@@ -365,6 +368,12 @@ BeginProg
 	  
 	  ' POWER CONTROLS
 	  '##########################################################
+	  'Reset telemetry counter at midnight
+	  If TimeIntoInterval(0,24,Hr) Then
+		  RADIO_INTVL_count = 0
+		  RADIO_INTVL = RADIO_INTVL_pblc*60
+	  EndIf
+	  
 	  If BATTERY_V > BATT_CHRG_FULL Then
 	  	RADIO_INTVL_mult =  1
 		  ASP_PWR =  True
@@ -381,34 +390,36 @@ BeginProg
 		  RADIO_PWR = True
 		
 	  ElseIf BATTERY_V <= BATT_CHRG_VERY_LOW  AND BATTERY_V> BATT_CHRG_EMPTY Then
-		  'If battery is very low, the radio will only transmit at 1400 (the counter 
-		  'is reset every night 
-      RADIO_INTVL = 14
+		  'If battery is very low, the radio will only transmit at 1600 (the counter 
+		  'is reset every night) 
+      RADIO_INTVL = 16*60
 		  RADIO_INTVL_mult = 1
 		  ASP_PWR =  True
+		  RADIO_INTVL_count = 0
 		  RADIO_PWR = True
 		
  	  ElseIf BATTERY_V <= BATT_CHRG_EMPTY		
 		  ASP_PWR =  False
 		  RADIO_PWR = False
 	  EndIf
-		
-	  If TimeIntoInterval(0, RADIO_INTVL, Hr) AND TimeIsBetween(0,10,60,Min)Then
+		 
+	  If TimeIsBetween(0,10,RADIO_INTVL,min) Then
 		  RADIO_INTVL_count += 1
 		  If RADIO_INTVL_count >= RADIO_INTVL_mult Then
 			  SW12(1,RADIO_PWR)
+			  EthernetPower(RADIO_PWR)
 			  SW12(2, ASP_PWR)			  
 		    RADIO_INTVL_count = 0
+			Timer (3,Sec,2)
 		  EndIf
 	  Else
 		  ' Turn off radio the rest of the time
 		  SW12(1,False)
+		  EthernetPower(RADIO_PWR)
+		 RADIO_TIME_SINCE_LAST = Timer(3,Sec,4)
 	  EndIf
 	  
-	  'Reset telemetry counter at midnight
-	  If TimeIntoInterval(0,24,Hr) Then
-		  RADIO_INTVL_count = 0
-	  EndIf
+
 	
 
 	  'PART 3: OUTPUT DATA
