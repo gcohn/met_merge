@@ -42,6 +42,7 @@ PreserveVariables
 Public LOGGERID
 Public PROGID as Long
 Public PROG_VERS = 8.1
+Public BATTERY_V_CHECK
 Public BATTERY_V
 
 Public HMP_150(3) As Float
@@ -61,7 +62,9 @@ Public WIND_DIR
 Public SR50(2)
 Public TEMP_CORR_DISTANCE
 Public SNOW_INITIAL_DISTANCE = 5.03
+Public SNOWDEPTH_CHECK
 Public SNOWDEPTH
+Public SNOW_PILL_CHECK
 Public SNOW_PILL
 Public SNOW_TARE
 
@@ -241,12 +244,15 @@ DataTable(Table105,true,-1)
   Average(4,WCRWC,FP2,0)
   Average(1,SOLAR_Wm2,FP2,0)
   Sample(1,SNOWDEPTH,FP2)
+  Sample(1,SNOWDEPTH_CHECK, FP2)
   Sample(1,QUALITY,FP2)
   Average(1,WINDSPEED,FP2,0)
   Sample(1,WIND_DIR,FP2)
   Sample(1,SNOW_PILL,FP2)
+  Sample(1, SNOW_PILL_CHECK, FP2)
   WindVector(1,WINDSPEED,WIND_DIR,FP2,False,0,0,0)
   Average(1,BATTERY_V,FP2,0)
+  Sample(1, BATTERY_V_CHECK, FP2)
   Sample(1,AIR_150_diag,FP2)
   Sample(1,AIR_250_diag,FP2)
   Sample(1,SNOW_diag,FP2)
@@ -431,6 +437,12 @@ BeginProg
 	  If  TimeIntoInterval(0,1,Min) Then
 		  PROGID=Status.ProgSignature(1,1)
 		EndIf
+		
+	  If TimeIntoInterval(0,5,Min)
+		BATTERY_V_CHECK = NAN
+		SNOWDEPTH_CHECK = NAN
+		SNOW_PILL_CHECK = NAN
+	  EndIf
 	  '
 	  '5 MINUTE OUTPUT
     CallTable Table105 
