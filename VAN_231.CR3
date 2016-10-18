@@ -415,7 +415,7 @@ BeginProg
 	  Else
 		  ' Turn off radio the rest of the time
 		  SW12(1,False)
-		  EthernetPower(RADIO_PWR)
+		  EthernetPower(False)
 		 RADIO_TIME_SINCE_LAST = Timer(3,Sec,4)
 	  EndIf
 	  
