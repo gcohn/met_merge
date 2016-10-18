@@ -138,7 +138,7 @@ Units CON_TIME_ON = seconds
 
 Dim LogNow = false
 'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,LogNow=true,-1)
+DataTable(CONT,LogNow=true,1200)
   TableFile("CRD:VARA_302_CONT_",64,-1,0,1,Day,0,0) 
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
