@@ -277,7 +277,6 @@ EndTable
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 
 BeginProg
-  SNOW_AIR_TEMP = AIR_450
   Scan(15,Sec, 3, 0)
     '
     'PART 1: MEASURE SENSORS
@@ -326,6 +325,8 @@ BeginProg
 	  'MEASURE SR50A SNOW DEPTH SENSOR
 	  If  TimeIntoInterval(0,300,Sec) Then                             
 		  SDI12Recorder(SR50(),3,0,"M1!",1,0)
+          SNOW_AIR_TEMP = AIR_450
+          SNOW_DIST_CORRECTION = (SQR((SNOW_AIR_TEMP+273.15)/273.15))
 	  EndIf
 	  '
 	  'MEASURE CURRENT FROM SHUNT
@@ -368,7 +369,6 @@ BeginProg
 	  If WIND_DIR<0 Then WIND_DIR=0
 	  
 	  'CORRECT SNOW DEPTH MEASUREMENT
-	  SNOW_DIST_CORRECTION = (SQR((AIR_450+273.15)/273.15))
 	  TEMP_CORR_DISTANCE = SNOW_RAW_DIST*SNOW_DIST_CORRECTION
 	  SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
 	  
