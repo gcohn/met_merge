@@ -35,6 +35,9 @@ Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
 Const OUTPUT_INTERVAL    = 5   'Output interval in minutes
 Const LID                = 235
 
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
+
 '\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
 Public LOGGERID
 Public PROGID As Long
@@ -195,7 +198,7 @@ Units CON_TIME_ON = seconds
 Dim LogNow = false
 
 'CONTROL TALBE- Status of pump program controls 
-DataTable(CONT,LogNow=true,-1)
+DataTable(CONT,LogNow=true,1200)
   TableFile("CRD:UPLO_235_CONT_",64,-1,0,1,Day,0,0) 
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
