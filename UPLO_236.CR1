@@ -26,27 +26,36 @@
 '////////////////////////////////////////////////////
 'Declare Constant Variable
 Const LID              = 236
-Const INITIAL_DISTANCE = 5.6
 
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
 Public PROG_VERS = 7
+Public BATTERY_V_CHECK
 Public BATTERY_V
 Public REF_TEMP
+
 Public SH_PRECIP
 Public SH_TEMP
-Public CS451(2)
-Public SNOW_TARE
-Public TIPPING_B
-Public TOTAL_TIPS
+
 Public SR50(2)
 Public TEMP_CORR_DISTANCE
+Public SNOW_INITIAL_DISTANCE = 5.6
 Public AIR_TEMP
+Public SNOWDEPTH_CHECK
 Public SNOWDEPTH
+Public SWE_CHECK
+Public CS451(2)
+Public SNOW_TARE
+
+Public TIPPING_B
+Public TOTAL_TIPS
+
 Public SOLAR_Wm2
+
 Public BP_mb
 
+Public SNOW_diag=1 '1 = snow present; 0=snow absent
 
 'Alias
 Alias SR50(1)= SNOW_RAW_DIST
@@ -73,11 +82,11 @@ Units BP_mb           = mb
 '#######################################################
 'SYS Table variables
 Dim SNOW_DIST_CORRECTION
+Dim SNOW_AIR_TEMP
 Dim SWE_RAW
-Dim SNOW_INITIAL_DISTANCE
+Dim SOLAR_Wm2_RAW
 
 Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
-Alias AIR_TEMP= SNOW_AIR_TEMP
 Alias SNOW_TARE = SWE_TARE
 
 'COEF defenitions
@@ -101,6 +110,7 @@ DataTable(SYS,true,-1)
   Sample(1,SNOW_AIR_TEMP,FP2)
   Sample(1,SWE_RAW,FP2)
   Sample(1,SWE_TARE,FP2)
+  Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
   Sample(1,coef_SOLAR_Wm2,FP2)
   Sample(1,coef_SH_PRECIP,FP2)
   Sample(1,offset_SH_PRECIP,FP2)
@@ -135,7 +145,6 @@ EndTable
 'Main Program
 '///////////////////////////////////////////////////////////////
 BeginProg
-  SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
   Scan (15,Sec,0,0)
     '   
     'MEASURE SHELTER RAIN GAGE FLOAT
@@ -175,6 +184,7 @@ BeginProg
     'PROCESS DATA
     '
     'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
+    SOLAR_Wm2_RAW = SOLAR_Wm2
     If (SOLAR_Wm2 < 0) Then
       SOLAR_Wm2 = 0
     EndIf
@@ -182,7 +192,7 @@ BeginProg
     'CORRECT SNOW DEPTH MEASUREMENT
     SNOW_DIST_CORRECTION=(SQR((AIR_TEMP+273.15)/273.15))
     TEMP_CORR_DISTANCE=SNOW_RAW_DIST*SNOW_DIST_CORRECTION
-    SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
     '
     'CHANGE SNOW PILLOW OUTPUT FROM PSIG TO mm H2O
 	  SWE_RAW = SWE

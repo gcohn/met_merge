@@ -40,15 +40,19 @@ Public LOGGERID
 Public PROGID As Long
 Public PROG_VERS=7
 Public REF_TEMP
+Public BATTERY_V_CHECK
 Public BATTERY_V
 Public SA_PRECIP
+
 Public HMP_150(3) As Float
 Public HMP_450(3) As Float
 Public AIR_250
 Public AIR_350
 Public ASP_350
+
 Public SOILT(4)
 Public WCRWC(4)
+
 Public WINDSPEED
 Public WIND_DIR
 Public WCRPA(4)
@@ -60,6 +64,7 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
+
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
 
@@ -166,8 +171,12 @@ EndTable
 'SYSTEM Diagnostics
 '#######################################################
 'SYS Table variables
+Dim RH_150_RAW
+Dim RH_450_RAW
+Public ASP_SPEED
 
 'COEF defenitions
+Dim coef_ASP_SPEED
 Public coef_WINDSPEED = 0.098
 Public coef_AIR_150 = 0.1
 Public offset_AIR_150 = -40
@@ -184,7 +193,10 @@ DataTable(SYS,true,-1)
   DataInterval(0,5,min,10)
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
+  Sample (1,PROG_VERS,FP2)  
+  Totalize(1,ASP_SPEED,Long,False)
+  Maximum(1, RH_150_RAW,FP2,False,0)
+  Maximum(1, RH_450_RAW,FP2,False,0)
   Sample(1,coef_WINDSPEED,FP2)
   Sample(1,coef_AIR_150,FP2)
   Sample(1,coef_AIR_450,FP2)
@@ -382,6 +394,9 @@ BeginProg
     '
     'MEASURE 3.5M ASPIRATED AIR TEMP
     Therm107(ASP_350,1,20,VX3,0,_60Hz,1,0)
+    'MEASURE ASPIRATED FAN SPEED PER MINUTE
+	  coef_ASP_SPEED = 1/(15/60)
+	  PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
     '
     'MEASURE SAR ORIFICE TEMP
     Therm107(SA_TEMP,1,21,VX4,0,_60HZ,1,0)
@@ -398,7 +413,9 @@ BeginProg
     'PART2: PROCESS DATA
     '
     'SET RH TO 100% IF GREATER THAN 100%
+    RH_150_RAW = RH_150
     If RH_150>100 AND RH_150<108 Then RH_150=100
+    RH_450_RAW =  RH_450
     If RH_450>100 AND RH_450<108 Then RH_450=100
     '
     'COMPUTE 1.5M & 4.5M DEWPOINT
