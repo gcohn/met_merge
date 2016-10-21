@@ -29,6 +29,14 @@
   ' Added panel temp to verify logger function
   ' AK renamed output file name
   ' Changed order of Public Table
+' Version 8 Created October 2016 by GC
+  ' Created Check variables in 105 table for snow measurements
+  ' For truncated measurements, stored raw values in SYS table (SOLAR and RH)
+  ' Added PreservedVariables command to restart logger from last known settings
+  ' Fixed table memory allocation for CONT table
+  ' Added automated power saving protocol to shut off radio and ASP during low power
+  ' Added advanced power tracking
+  ' Standardazed public table display for easier reading of program and keypad.
 
 Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
