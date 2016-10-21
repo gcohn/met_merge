@@ -54,6 +54,7 @@ PreserveVariables
 Public LOGGERID
 Public PROGID as Long
 Public PROG_VERS = 8.3
+Public REF_TEMP
 Public BATTERY_V_CHECK
 Public BATTERY_V
 
@@ -341,14 +342,17 @@ BeginProg
 	  '
 	  'MEASURE SR50A SNOW DEPTH SENSOR
 	  If  TimeIntoInterval(0,300,Sec) Then                             
-		  SDI12Recorder(SR50(),3,0,"M1!",1,0)
-          SNOW_AIR_TEMP = AIR_450
-          SNOW_DIST_CORRECTION = (SQR((SNOW_AIR_TEMP+273.15)/273.15))
+  	  SDI12Recorder(SR50(),3,0,"M1!",1,0)
+      SNOW_AIR_TEMP = AIR_450
+      SNOW_DIST_CORRECTION = (SQR((SNOW_AIR_TEMP+273.15)/273.15))
 	  EndIf
 	  '
 	  'MEASURE CURRENT FROM SHUNT
-	  VoltDiff (PWR_AMP,1,mV5000,14,True ,0,250,coef_PWR_SHUNT,0)
+	  VoltDiff (PWR_AMP,1,mV5000,13,True ,0,250,coef_PWR_SHUNT,0)
 	  '
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
+    '
 	  'MEASURE BATTERY VOLTAGE
 	  Battery(BATTERY_V)
 	  '
