@@ -1,5 +1,5 @@
 ' CR1000 Series Datalogger
-' Program name: VARA_302_V16.2.CR1
+' Program name: VARA_302_V16.3.CR1
 ' Program for standalone raing gauge and associated sensors at VARA
 '
 ' Version 11 Created on 7-15-15 FOR UPGRADE FROM CR10X DATALOGGER TO CR1000
@@ -30,6 +30,14 @@
      ' Error in VAN_232_V03.1 Logger ID. Upgrade site to Version x.2
      ' Error in VARA_302_V16.1 output of AIR450 was halted due to alias
      ' Both errors are corrected in version x.2 (VARA v16.2; VAN v3.2)
+' Version 16.3 Created October 2016 by GC
+     ' Created Check variables in 105 table for snow measurements
+     ' For truncated measurements, stored raw values in SYS table (SOLAR and RH)
+     ' Added PreservedVariables command to restart logger from last known settings
+     ' Fixed table memory allocation for CONT table
+     ' Added automated power saving protocol to shut off radio and ASP during low power
+     ' Added advanced power tracking
+     ' Standardazed public table display for easier reading of program and keypad.
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -42,7 +50,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=16.2
+Public PROG_VERS=16.3
 Public BATTERY_V_CHECK
 Public BATTERY_V
 Public PUMPVOLTS_CHECK
@@ -109,9 +117,14 @@ DataTable(PWR,true,-1)
   Average(1,PWR_AMP,FP2,False)
   Maximum(1,PWR_AMP,FP2,False,False)
   Sample(1,RADIO_PWR,Boolean)  
+  Maximum(1,RADIO_TIME_SINCE_LAST,FP2,False,False)
   Maximum(1,RADIO_INTVL,FP2,False,False)
   Maximum(1,RADIO_INTVL_count,FP2,False,False)
   Maximum (1,RADIO_INTVL_mult,FP2,False,False)
+  Sample(1,BATT_CHRG_FULL,FP2)
+  Sample(1,BATT_CHRG_LOW,FP2)
+  Sample(1,BATT_CHRG_VERY_LOW,FP2)
+  Sample(1,BATT_CHRG_EMPTY,FP2)
 EndTable
 
 'CONTROL PARAMETERS

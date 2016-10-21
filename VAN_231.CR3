@@ -1,5 +1,5 @@
 ' CR3000 Series Datalogger
-' Program name: VAN_231_V08.1.CR3
+' Program name: VAN_231_V08.3.CR3
 ' Written for CR3000 datalogger on Vanmet tower.
 '
 ' Version 1 Created 2013-09-18 by AK
@@ -29,7 +29,19 @@
 ' Version 8.1 created 3-23-16 by GC
   ' Added standardized SYS table to track calibration coeficients, SWE tares, and raw instrument values
   ' Add decimal subversionioning: 8 is VARA program version; 1 is a unified site program version.
-
+' Version 8.2 Created May 2016 by GC
+  ' Error in VAN_232_V03.1 Logger ID. Upgrade site to Version x.2
+  ' Error in VARA_302_V16.1 output of AIR450 was halted due to alias
+  ' Both errors are corrected in version x.2 (VARA v16.2; VAN v3.2)
+' Version 8.3 Created October 2016 by GC
+  ' Created Check variables in 105 table for snow measurements
+  ' For truncated measurements, stored raw values in SYS table (SOLAR and RH)
+  ' Added PreservedVariables command to restart logger from last known settings
+  ' Fixed table memory allocation for CONT table
+  ' Added automated power saving protocol to shut off radio and ASP during low power
+  ' Added advanced power tracking
+  ' Standardazed public table display for easier reading of program and keypad.
+	 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
 'Declare Constant Variable    
@@ -41,7 +53,7 @@ PreserveVariables
 'Declare Public Variable 
 Public LOGGERID
 Public PROGID as Long
-Public PROG_VERS = 8.1
+Public PROG_VERS = 8.3
 Public BATTERY_V_CHECK
 Public BATTERY_V
 
@@ -159,10 +171,15 @@ DataTable(PWR,true,-1)
   Average(1,PWR_AMP,FP2,False)
   Maximum(1,PWR_AMP,FP2,False,False)
   Sample(1,ASP_PWR,Boolean)
-  Sample(1,RADIO_PWR,Boolean)  
+  Sample(1,RADIO_PWR,Boolean) 
+  Maximum(1,RADIO_TIME_SINCE_LAST,FP2,False,False) 
   Maximum(1,RADIO_INTVL,FP2,False,False)
   Maximum(1,RADIO_INTVL_count,FP2,False,False)
   Maximum (1,RADIO_INTVL_mult,FP2,False,False)
+  Sample(1,BATT_CHRG_FULL,FP2)
+  Sample(1,BATT_CHRG_LOW,FP2)
+  Sample(1,BATT_CHRG_VERY_LOW,FP2)
+  Sample(1,BATT_CHRG_EMPTY,FP2)
 EndTable
 
 'SYSTEM Diagnostics

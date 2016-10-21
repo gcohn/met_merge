@@ -1,5 +1,5 @@
 ' CR1000 Series Datalogger
-' Program name: VAN_232_V03.1.CR1
+' Program name: VAN_232_V03.3.CR1
 ' Program for CR1000 datalogger on Vanmet tower.  Measures NR01, Gill Windobserver II
 ' sonic anamometer.  
 '
@@ -15,6 +15,14 @@
 ' Version 3.2 Created on 4/20/16 by GC
   ' At full check, observed invalid progid
   ' Edited and installed PROG_ID as Long
+' Version 3.3 Created October 2016 by GC
+  ' Created Check variables in 105 table for snow measurements
+  ' For truncated measurements, stored raw values in SYS table (SOLAR and RH)
+  ' Added PreservedVariables command to restart logger from last known settings
+  ' Fixed table memory allocation for CONT table
+  ' Added automated power saving protocol to shut off radio and ASP during low power
+  ' Added advanced power tracking
+  ' Standardazed public table display for easier reading of program and keypad.
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -38,7 +46,7 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
-Public PROG_VERS = 3.2
+Public PROG_VERS = 3.3
 
 Units Ux   = [m s-1]
 Units Uy   = [m s-1]
