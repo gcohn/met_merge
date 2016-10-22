@@ -16,7 +16,14 @@
 '  Updated standalone pump controls to fix bug
 '  Added CONT table to track pump controls
 '  Added SYS table to track raw SNOW_DEPTH, SWE tare, and other coefficients
-'
+' Version 6 Created October 2016 by GC
+  ' Created Check variables in 105 table for snow measurements
+  ' For truncated measurements, stored raw values in SYS table (SOLAR and RH)
+  ' Added PreservedVariables command to restart logger from last known settings
+  ' Fixed table memory allocation for CONT table
+  ' Added automated power saving protocol to shut off radio and ASP during low power
+  ' Added advanced power tracking
+  ' Standardazed public table display for easier reading of program and keypad.
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
@@ -29,7 +36,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=5
+Public PROG_VERS=6
 Public REF_TEMP
 Public BATTERY_V_CHECK
 Public BATTERY_V
@@ -317,7 +324,7 @@ BeginProg
     Battery(BATTERY_V)
     '
     'MEASURE PUMPVOLTS
-    VoltDiff (PUMPVOLTS,1,mV5000,8,True,0,_60Hz,0.1,0)
+    VoltDiff (PUMPVOLTS,1,mV5000,4,True,0,_60Hz,0.1,0)
     '
     'MEASURE PANEL TEMP
     PanelTemp(REF_TEMP,_60Hz)
