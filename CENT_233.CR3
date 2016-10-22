@@ -22,19 +22,29 @@ Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
 Const OUTPUT_INTERVAL    = 5   'Output interval in minutes
 Const LID                = 233
 
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
+
 '\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
+Public LOGGERID
+Public PROGID As Long
+Public PROG_VERS = 5
+Public REF_TEMP
+Public BATTERY_V_CHECK
+Public BATTERY_V
 
 Public HMP_150(3) As Float
 Public HMP_450(3) As Float
 Public AIR_250
 Public AIR_350
 Public ASP_350
+
 Public SOILT(4)
 Public WCRWC(4)
+Public WCRPA(4)
+
 Public WINDSPEED
 Public WIND_DIR
-Public BATTERY_V
-Public WCRPA(4)
 Public sncstring As String * 60
 Public sncstring_bytes
 Public snc(5)
@@ -43,11 +53,10 @@ Public Vh
 Public diag_flag
 Public nan_flag
 Public strtosend
-Public LOGGERID
-Public PROGID As Long
+
 Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
 Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
-Public PROG_VERS = 5
+
 
 Alias HMP_150(1) = AIR_150
 Alias HMP_150(2) = RH_150
@@ -112,9 +121,12 @@ Dim n                 = 1
 'SYSTEM Diagnostics
 '#######################################################
 'SYS Table variables
-
+Dim RH_150_RAW
+Dim RH_450_RAW
+Public ASP_SPEED
 
 'COEF defenitions
+Dim coef_ASP_SPEED
 Public coef_AIR_150 = 0.1
 Public offset_AIR_150 = -40
 Public coef_AIR_450 = 0.1
@@ -129,7 +141,10 @@ DataTable(SYS,true,-1)
   DataInterval(0,5,min,10)
   Sample (1,LOGGERID,FP2)
   Sample (1,PROGID,Long)
-  Sample (1,PROG_VERS,FP2)
+  Sample (1,PROG_VERS,FP2)  
+  Totalize(1,ASP_SPEED,Long,False)
+  Maximum(1, RH_150_RAW,FP2,False,0)
+  Maximum(1, RH_450_RAW,FP2,False,0)
   Sample(1,coef_AIR_150,FP2)
   Sample(1,coef_AIR_450,FP2)
   Sample(1,offset_AIR_150,FP2)
@@ -166,6 +181,7 @@ DataTable(Table105,true,-1)
   Sample(1,WIND_DIR,FP2)
   WindVector(1,WINDSPEED,WIND_DIR,FP2,False,0,0,0)
   Average(1,BATTERY_V,FP2,0)
+  Sample (1, BATTERY_V_CHECK, FP2)
   Sample(1,AIR_150_diag,FP2)
   Sample(1,AIR_250_diag,FP2)
   Totalize (1,n,FP2,False)  'START OF SNOIC OUTPUT
@@ -280,6 +296,9 @@ BeginProg
     '
     'MEASURE 3.5M ASPIRATED AIR TEMP
     Therm107(ASP_350,1,20,VX3,0,_60Hz,1,0)
+    'MEASURE ASPIRATED FAN SPEED PER MINUTE
+	   coef_ASP_SPEED = 1/(15/60)
+	   PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
     '
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
@@ -287,7 +306,9 @@ BeginProg
     'PART2: PROCESS DATA
     '
     'SET RH TO 100% IF GREATER THAN 100%
+    RH_150_RAW = RH_150
     If RH_150>100 AND RH_150<108 Then RH_150=100
+    RH_450_RAW =  RH_450
     If RH_450>100 AND RH_450<108 Then RH_450=100
     '
     'COMPUTE 1.5M & 4.5M DEWPOINT
@@ -312,6 +333,10 @@ BeginProg
     'RECORD THE SIGNATURE AS PROGID
     If  TimeIntoInterval(0,1,Min) Then
       PROGID=Status.ProgSignature(1,1)
+    EndIf
+    
+    If TimeIntoInterval(0,5,Min)
+      BATTERY_V_CHECK = NAN
     EndIf
     '
     '5 MINUTE OUTPUT

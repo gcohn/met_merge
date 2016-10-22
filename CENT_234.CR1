@@ -22,28 +22,43 @@
 '////////////////////////////////////////////////////
 'Declare Constant Variable
 Const LID              = 234
-Const INITIAL_DISTANCE = 2.5
+
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
 
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
+Public PROG_VERS=5
+Public REF_TEMP
+Public BATTERY_V_CHECK
+Public BATTERY_V
+Public PUMPVOLTS_CHECK
+Public PUMPVOLTS
+
 Public SA_PRECIP
 Public SH_PRECIP
-Public SWE
-Public TIPPING_B
-Public TOTAL_TIPS
+Public SH_TEMP
+
 Public SR50(2)
 Public TEMP_CORR_DISTANCE
+Public SNOW_INITIAL_DISTANCE = 3.35
 Public AIR_TEMP
+Public SNOWDEPTH_CHECK
 Public SNOWDEPTH
-Public SH_TEMP
-Public BATTERY_V
+Public SWE_CHECK
+Public SWE
+Public SNOW_TARE
+
+Public TIPPING_B
+Public TOTAL_TIPS
+
 Public PAR
 Public SOLAR_Wm2
 Public SOLAR_MJ
 Public SOLARMULT
-Public SNOW_TARE
-Public PROG_VERS=5
+
+Public SNOW_diag=1 '1 = snow present; 0=snow absent
 
 
 'Alias
@@ -111,11 +126,11 @@ EndTable
 '#######################################################
 'SYS Table variables
 Dim SNOW_DIST_CORRECTION
+Dim SNOW_AIR_TEMP
 Dim SWE_RAW
-Dim SNOW_INITIAL_DISTANCE
+Dim SOLAR_Wm2_RAW
 
 Alias TEMP_CORR_DISTANCE= SNOW_TEMP_CORR_DISTANCE
-Alias AIR_TEMP= SNOW_AIR_TEMP
 Alias SNOW_TARE = SWE_TARE
 
 'COEF defenitions
@@ -141,6 +156,7 @@ DataTable(SYS,true,-1)
   Sample(1,SNOW_AIR_TEMP,FP2)
   Sample(1,SWE_RAW,FP2)
   Sample(1,SWE_TARE,FP2)  
+  Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
   Sample(1,coef_SOLAR_Wm2,FP2)
   Sample(1,coef_PAR,FP2)
   Sample(1,coef_SA_PRECIP,FP2)
@@ -161,12 +177,17 @@ DataTable(Table105,true,-1)
   Sample (1,SA_PRECIP,FP2)
   Sample (1,SH_PRECIP,FP2)
   Sample (1,SWE,FP2)
+  Sample (1, SWE_CHECK, FP2)
   Sample (1,SNOWDEPTH,FP2)
+  Sample (1, SNOWDEPTH_CHECK, FP2)
   Sample (1,QUALITY,FP2)
   Totalize (1,TIPPING_B,FP2,0)
   Average (1,SA_TEMP,FP2,0)
   Average (1,SH_TEMP,FP2,0)
   Average (1,BATTERY_V,FP2,0)
+  Sample (1, BATTERY_V_CHECK, FP2)
+  Average (1,PUMPVOLTS,FP2,0)
+  Sample (1, PUMPVOLTS_CHECK, FP2)
   Average (1,PAR,FP2,0)
   Average (1,SOLAR_Wm2,FP2,0)
   Maximum (1,PAR,FP2,False,0)
@@ -176,9 +197,7 @@ EndTable
 '
 'Main Program
 '///////////////////////////////////////////////////////////////
-BeginProg
-  SNOW_INITIAL_DISTANCE = INITIAL_DISTANCE
-
+BeginProg  
   Timer(2,Sec,2)
   Scan (15,Sec,0,0)    
     'PUMP CONTROL
@@ -257,6 +276,7 @@ BeginProg
     'PROCESS DATA
     '
     'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
+    SOLAR_Wm2_RAW = SOLAR_Wm2
     If (SOLAR_Wm2 < 0) Then
       SOLAR_Wm2 = 0
     EndIf
@@ -268,7 +288,7 @@ BeginProg
     'CORRECT SNOW DEPTH MEASUREMENT
     SNOW_DIST_CORRECTION=(SQR((AIR_TEMP+273.15)/273.15))
     TEMP_CORR_DISTANCE=SNOW_RAW_DIST*SNOW_DIST_CORRECTION
-    SNOWDEPTH=INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
     '
     'SUBTRACT TARE FOR SNOW PILLOW
     SWE_RAW =  SWE
@@ -285,6 +305,13 @@ BeginProg
     'RECORD THE SIGNATURE AS PROGID
     If TimeIntoInterval(0,1,Min) Then
       PROGID=Status.ProgSignature(1,1)
+    EndIf
+    
+    If TimeIntoInterval(0,5,Min)
+      BATTERY_V_CHECK = NAN
+      PUMPVOLTS_CHECK = NAN
+      SNOWDEPTH_CHECK = NAN
+      SWE_CHECK = NAN
     EndIf
     '
     '5 MINUTE OUTPUT
