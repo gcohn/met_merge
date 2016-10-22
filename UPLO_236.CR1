@@ -315,6 +315,11 @@ BeginProg
     If TimeIntoInterval(0,1,Min) Then
       PROGID=Status.ProgSignature(1,1)
     EndIf
+    If TimeIntoInterval(0,5,Min)
+      BATTERY_V_CHECK = NAN
+      SNOWDEPTH_CHECK = NAN
+      SWE_CHECK = NAN
+    EndIf
     '
     '5 MINUTE OUTPUT
     CallTable Table105
