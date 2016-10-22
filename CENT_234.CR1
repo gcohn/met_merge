@@ -85,6 +85,45 @@ Units SNOW_TARE       = number
 Units CON_TEMP        = number
 
 
+'POWER Status
+'#######################################################
+' Set power levels. Each level changes function
+Public BATT_CHRG_FULL =  12.4
+Public BATT_CHRG_LOW = 12.2
+Public BATT_CHRG_VERY_LOW = 12.0
+Public BATT_CHRG_EMPTY = 11.8
+
+' Set power to peripherals
+Public RADIO_PWR = True
+Public RADIO_INTVL_pblc = 4
+Dim RADIO_INTVL = 4*60
+Public RADIO_INTVL_mult = 1
+Public RADIO_INTVL_count = 1
+Public RADIO_TIME_SINCE_LAST
+'Public PWR_AMP
+Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
+
+DataTable(PWR,true,-1)
+  TableFile("CRD:CENT_234_PWR_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Minimum(1,BATTERY_V,FP2,False,False)
+  'Average(1,PWR_AMP,FP2,False)
+  'Maximum(1,PWR_AMP,FP2,False,False)
+  Sample(1,RADIO_PWR,Boolean) 
+  Maximum(1,RADIO_TIME_SINCE_LAST,FP2,False,False) 
+  Maximum(1,RADIO_INTVL,FP2,False,False)
+  Maximum(1,RADIO_INTVL_count,FP2,False,False)
+  Maximum (1,RADIO_INTVL_mult,FP2,False,False)
+  Sample(1,BATT_CHRG_FULL,FP2)
+  Sample(1,BATT_CHRG_LOW,FP2)
+  Sample(1,BATT_CHRG_VERY_LOW,FP2)
+  Sample(1,BATT_CHRG_EMPTY,FP2)
+EndTable
+
+
 'CONTROL PARAMETERS
 '#######################################################
 'CONT Table variables
@@ -259,7 +298,11 @@ BeginProg
     PulseCount (TIPPING_B,1,1,2,0,1.0,0)
     '
     'MEASURE SR50A SNOW DEPTH SENSOR
-    SDI12Recorder (SR50(),3,0,"M1!",1.0,0)
+    If  TimeIntoInterval(0,300,Sec) Then   
+      SDI12Recorder (SR50(),3,0,"M1!",1.0,0)
+      SNOW_AIR_TEMP = AIR_TEMP              
+      SNOW_DIST_CORRECTION=(SQR((SNOW_AIR_TEMP+273.15)/273.15))
+    EndIf
     '
     'MEASURE STAND ALONE RAINGAGE ORIFICE TEMP
     Therm107 (SA_TEMP,1,11,Vx2,0,_60Hz,1.0,0)
@@ -273,6 +316,16 @@ BeginProg
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
     '
+    'MEASURE PUMPVOLTS
+    VoltDiff (PUMPVOLTS,1,mV5000,8,True,0,_60Hz,0.1,0)
+    '
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
+    '
+    'MEASURE CURRENT FROM SHUNT
+	   'VoltDiff (PWR_AMP,1,mV5000,8,True ,0,250,coef_PWR_SHUNT,0)
+	   '
+	   
     'PROCESS DATA
     '
     'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
@@ -286,7 +339,6 @@ BeginProg
     SOLAR_MJ = SOLAR_Wm2 * SOLARMULT
     '
     'CORRECT SNOW DEPTH MEASUREMENT
-    SNOW_DIST_CORRECTION=(SQR((AIR_TEMP+273.15)/273.15))
     TEMP_CORR_DISTANCE=SNOW_RAW_DIST*SNOW_DIST_CORRECTION
     SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
     '
@@ -297,6 +349,53 @@ BeginProg
     'COMPUTE TOTAL TIPS
     TOTAL_TIPS = TOTAL_TIPS + TIPPING_B
     '
+    
+    ' POWER CONTROLS
+    '##########################################################
+    'Reset telemetry counter at midnight
+    If TimeIntoInterval(0,24,Hr) Then
+      RADIO_INTVL_count = 0
+      RADIO_INTVL = RADIO_INTVL_pblc*60
+    EndIf
+    
+    If BATTERY_V > BATT_CHRG_FULL Then
+      RADIO_INTVL_mult =  1
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_FULL  AND BATTERY_V> BATT_CHRG_LOW Then
+      RADIO_INTVL_mult = 2 
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_LOW  AND BATTERY_V> BATT_CHRG_VERY_LOW Then
+      RADIO_INTVL_mult = 3
+      RADIO_PWR = True
+      
+    ElseIf BATTERY_V <= BATT_CHRG_VERY_LOW  AND BATTERY_V> BATT_CHRG_EMPTY Then
+      'If battery is very low, the radio will only transmit at 1600 (the counter 
+      'is reset every night) 
+      RADIO_INTVL = 16*60
+      RADIO_INTVL_mult = 1
+      RADIO_INTVL_count = 0
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_EMPTY	
+      RADIO_PWR = False
+    EndIf
+    
+    If TimeIsBetween(0,10,RADIO_INTVL,min) Then
+      RADIO_INTVL_count += 1
+    If RADIO_INTVL_count >= RADIO_INTVL_mult Then
+      EthernetPower(RADIO_PWR)
+      RADIO_INTVL_count = 0
+      Timer (3,Sec,2)
+    EndIf
+    Else
+      ' Turn off radio the rest of the time
+      EthernetPower(False)
+      RADIO_TIME_SINCE_LAST = Timer(3,Sec,4)
+    EndIf
+	   
+
     'OUTPUT DATA
     '
     'SET LOGGERID TO 234
@@ -318,6 +417,7 @@ BeginProg
     CallTable Table105
     CallTable CONT
     CallTable SYS
+    CallTable PWR
   NextScan
 EndProg
 

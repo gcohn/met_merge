@@ -118,6 +118,46 @@ Units AIR_250_diag    = number
 
 Dim n                 = 1
 
+'POWER Status
+'#######################################################
+' Set power levels. Each level changes function
+Public BATT_CHRG_FULL =  12.4
+Public BATT_CHRG_LOW = 12.2
+Public BATT_CHRG_VERY_LOW = 12.0
+Public BATT_CHRG_EMPTY = 11.8
+
+' Set power to peripherals
+Public RADIO_PWR = True
+Public RADIO_INTVL_pblc = 4
+Dim RADIO_INTVL = 4*60
+Public RADIO_INTVL_mult = 1
+Public RADIO_INTVL_count = 1
+Public RADIO_TIME_SINCE_LAST
+Public ASP_PWR = True
+Public PWR_AMP
+Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
+
+DataTable(PWR,true,-1)
+  TableFile("CRD:UPLO_235_PWR_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Minimum(1,BATTERY_V,FP2,False,False)
+  Average(1,PWR_AMP,FP2,False)
+  Maximum(1,PWR_AMP,FP2,False,False)
+  Sample(1,ASP_PWR,Boolean)
+  Sample(1,RADIO_PWR,Boolean) 
+  Maximum(1,RADIO_TIME_SINCE_LAST,FP2,False,False) 
+  Maximum(1,RADIO_INTVL,FP2,False,False)
+  Maximum(1,RADIO_INTVL_count,FP2,False,False)
+  Maximum (1,RADIO_INTVL_mult,FP2,False,False)
+  Sample(1,BATT_CHRG_FULL,FP2)
+  Sample(1,BATT_CHRG_LOW,FP2)
+  Sample(1,BATT_CHRG_VERY_LOW,FP2)
+  Sample(1,BATT_CHRG_EMPTY,FP2)
+EndTable
+
 'SYSTEM Diagnostics
 '#######################################################
 'SYS Table variables
@@ -303,6 +343,13 @@ BeginProg
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
     '
+    'MEASURE CURRENT FROM SHUNT
+	   VoltDiff (PWR_AMP,1,mV5000,13,True ,0,250,coef_PWR_SHUNT,0)
+    '
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
+    '
+      
     'PART2: PROCESS DATA
     '
     'SET RH TO 100% IF GREATER THAN 100%
@@ -324,6 +371,61 @@ BeginProg
     'CORRECT WIND DIRECTION MEASUREMENT
     If WIND_DIR>360 Then WIND_DIR=0
     If WIND_DIR<0 Then WIND_DIR=0
+    
+    ' POWER CONTROLS
+    '##########################################################
+    'Reset telemetry counter at midnight
+    If TimeIntoInterval(0,24,Hr) Then
+      RADIO_INTVL_count = 0
+      RADIO_INTVL = RADIO_INTVL_pblc*60
+    EndIf
+    
+    If BATTERY_V > BATT_CHRG_FULL Then
+      RADIO_INTVL_mult =  1
+      ASP_PWR =  True
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_FULL  AND BATTERY_V> BATT_CHRG_LOW Then
+      RADIO_INTVL_mult = 2 
+      ASP_PWR =  True
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_LOW  AND BATTERY_V> BATT_CHRG_VERY_LOW Then
+      RADIO_INTVL_mult = 3
+      ASP_PWR =  True
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_VERY_LOW  AND BATTERY_V> BATT_CHRG_EMPTY Then
+      'If battery is very low, the radio will only transmit at 1600 (the counter 
+      'is reset every night) 
+      RADIO_INTVL = 16*60
+      RADIO_INTVL_mult = 1
+      ASP_PWR =  True
+      RADIO_INTVL_count = 0
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_EMPTY		
+      ASP_PWR =  False
+      RADIO_PWR = False
+    EndIf
+    
+    If TimeIsBetween(0,10,RADIO_INTVL,min) Then
+      RADIO_INTVL_count += 1
+    If RADIO_INTVL_count >= RADIO_INTVL_mult Then
+      SW12(1,RADIO_PWR)
+      EthernetPower(RADIO_PWR)
+      SW12(2, ASP_PWR)			  
+      RADIO_INTVL_count = 0
+      Timer (3,Sec,2)
+    EndIf
+    Else
+      ' Turn off radio the rest of the time
+      SW12(1,False)
+      EthernetPower(False)
+      RADIO_TIME_SINCE_LAST = Timer(3,Sec,4)
+    EndIf
+
+
     '
     'PART 3: OUTPUT DATA
     '
@@ -342,5 +444,6 @@ BeginProg
     '5 MINUTE OUTPUT
     CallTable Table105
     CallTable SYS
+    CallTable PWR
   NextScan
 EndProg
