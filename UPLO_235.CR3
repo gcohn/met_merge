@@ -161,7 +161,7 @@ Public RADIO_INTVL_mult = 1
 Public RADIO_INTVL_count = 1
 Public RADIO_TIME_SINCE_LAST
 Public RADIO_DURATION_strt = 25 'Minutes
-Public RADIO_DURATION = 35 'Minutes
+Public RADIO_DURATION_end = 35 'Minutes
 Public ASP_PWR = True
 Public PWR_AMP
 Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
