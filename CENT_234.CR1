@@ -328,7 +328,7 @@ BeginProg
     Battery(BATTERY_V)
     '
     'MEASURE PUMPVOLTS
-    VoltDiff (PUMPVOLTS,1,mV5000,4,True,0,_60Hz,0.1,0)
+    VoltDiff (PUMPVOLTS,1,mV5000,8,True,0,_60Hz,0.1,0)
     '
     'MEASURE PANEL TEMP
     PanelTemp(REF_TEMP,_60Hz)
