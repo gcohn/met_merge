@@ -102,11 +102,12 @@ Public BATT_CHRG_EMPTY = 11.8
 
 ' Set power to peripherals
 Public RADIO_PWR = True
-Public RADIO_INTVL_pblc = 4
+Public RADIO_INTVL_pblc = 4 'Hours
 Dim RADIO_INTVL = 4*60
 Public RADIO_INTVL_mult = 1
 Public RADIO_INTVL_count = 1
 Public RADIO_TIME_SINCE_LAST
+Public RADIO_DURATION =10 'Minutes
 'Public PWR_AMP
 Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
 
@@ -389,7 +390,7 @@ BeginProg
       RADIO_PWR = False
     EndIf
     
-    If TimeIsBetween(0,10,RADIO_INTVL,min) Then
+    If TimeIsBetween(0,RADIO_DURATION,RADIO_INTVL,min) Then
       RADIO_INTVL_count += 1
     If RADIO_INTVL_count >= RADIO_INTVL_mult Then
       EthernetPower(RADIO_PWR)
