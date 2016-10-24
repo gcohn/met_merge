@@ -105,6 +105,8 @@ Dim RADIO_INTVL = 4*60
 Public RADIO_INTVL_mult = 1
 Public RADIO_INTVL_count = 1
 Public RADIO_TIME_SINCE_LAST
+Public RADIO_DURATION_strt = 34 'Minutes
+Public RADIO_DURATION_end = 44 'Minutes
 Public PWR_AMP
 Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
 
@@ -122,6 +124,8 @@ DataTable(PWR,true,-1)
   Maximum(1,RADIO_INTVL,FP2,False,False)
   Maximum(1,RADIO_INTVL_count,FP2,False,False)
   Maximum (1,RADIO_INTVL_mult,FP2,False,False)
+  Sample(1,RADIO_DURATION_strt,FP2)
+  Sample(1,RADIO_DURATION_end,FP2)
   Sample(1,BATT_CHRG_FULL,FP2)
   Sample(1,BATT_CHRG_LOW,FP2)
   Sample(1,BATT_CHRG_VERY_LOW,FP2)
@@ -345,7 +349,7 @@ BeginProg
 		  RADIO_PWR = False
 	  EndIf
 		
-	  If TimeIsBetween(0,10,RADIO_INTVL, min) Then
+	  If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL, min) Then
 		  RADIO_INTVL_count += 1
 		  If RADIO_INTVL_count >= RADIO_INTVL_mult Then
         SW12(RADIO_PWR)		 
