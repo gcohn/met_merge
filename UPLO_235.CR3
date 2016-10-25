@@ -339,9 +339,9 @@ EndTable
 '
 'MEASURE GILL WINDOBSERVER II SONIC ANAMOMETER
 BeginProg
-  SW12 (1,0)
+  'SW12 (1,0)
   Delay (1,5,Sec)
-  SW12 (1,1)
+  'SW12 (1,1)
   SerialOpen (Com1,9600,16,0,100)
   SerialFlush(Com1)
   Delay (1,5,Sec)
@@ -369,9 +369,9 @@ BeginProg
     EndIf
     Vh  =  SQR(Ux^2+Uy^2)
     If nan_flag > 1 Then
-      SW12 (1,0)
+      'SW12 (1,0)
       Delay (1,5,Sec)
-      SW12 (1,1)
+      'SW12 (1,1)
       SerialClose (Com1)
       Delay (1,5,Sec)
       SerialOpen (Com1,9600,16,0,100)
