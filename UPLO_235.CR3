@@ -161,7 +161,7 @@ Public RADIO_INTVL_mult = 1
 Public RADIO_INTVL_count = 1
 Public RADIO_TIME_SINCE_LAST
 Public RADIO_DURATION_strt = 25 'Minutes
-Public RADIO_DURATION_end = 35 'Minutes
+Public RADIO_DURATION_end = 38 'Minutes
 Public ASP_PWR = True
 Public PWR_AMP
 Public coef_PWR_SHUNT = 100 '1 / 0.01 ohms
@@ -534,13 +534,14 @@ BeginProg
 		  ASP_PWR =  False
 		  RADIO_PWR = False
 	  EndIf
-		 
+	  
+		
+      SW12(2, ASP_PWR)
 	  If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL,min) Then
 		  RADIO_INTVL_count += 1
 		  If RADIO_INTVL_count >= RADIO_INTVL_mult Then
 			  SW12(1,RADIO_PWR)
-			  EthernetPower(RADIO_PWR)
-			  SW12(2, ASP_PWR)			  
+			  EthernetPower(RADIO_PWR)			  			  
 		    RADIO_INTVL_count = 0
 			Timer (3,Sec,2)
 		  EndIf
