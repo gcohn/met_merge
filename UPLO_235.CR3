@@ -1,4 +1,4 @@
-'Program name: UPLO_235_V07.CR3
+'Program name: UPLO_235_V08.CR3
 '
 ' Version 1 written: 9-11-15 by JM & SW  
 ' Version 2 created on 9-11-15
@@ -51,9 +51,9 @@ Public LOGGERID
 Public PROGID As Long
 Public PROG_VERS=8
 Public REF_TEMP
-Public BATTERY_V_CHECK
+Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
-Public PUMPVOLTS_CHECK
+Public PUMPVOLTS_CHECK = NAN
 Public PUMPVOLTS
 
 Public SA_PRECIP
@@ -292,7 +292,10 @@ DataTable(Table105,true,-1)
   Average (4,SOILT,FP2,0)
   Average (4,WCRWC,FP2,0)
   Average (1,SA_TEMP,FP2,0)
-  Average (1,BATTERY_V,FP2,0)  
+  Average (1,BATTERY_V,FP2,0) 
+  Sample(1, BATTERY_V_CHECK, FP2) 
+  Average (1,PUMPVOLTS,FP2,0)
+  Sample (1, PUMPVOLTS_CHECK, FP2)
   'SAMPLES
   Sample (1,SA_PRECIP,FP2)
   Sample (1,AIR_150_diag,FP2)
@@ -381,6 +384,10 @@ BeginProg
     '
     'MEASURE WIND SPEED
     PulseCount(WINDSPEED,1,1,1,1,0.098,0)
+    'MEASURE ASPIRATED FAN SPEED PER MINUTE
+	  coef_ASP_SPEED = 1/(15/60)
+	  PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
+	  
   NextScan
 
   SlowSequence
@@ -452,9 +459,6 @@ BeginProg
     '
     'MEASURE 3.5M ASPIRATED AIR TEMP
     Therm107(ASP_350,1,20,VX3,0,_60Hz,1,0)
-    'MEASURE ASPIRATED FAN SPEED PER MINUTE
-	  coef_ASP_SPEED = 1/(15/60)
-	  'PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
     '
     'MEASURE SAR ORIFICE TEMP
     Therm107(SA_TEMP,1,21,VX4,0,_60HZ,1,0)
@@ -536,7 +540,7 @@ BeginProg
 	  EndIf
 	  
 		
-      SW12(2, ASP_PWR)
+    SW12(2, ASP_PWR)
 	  If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL,min) Then
 		  RADIO_INTVL_count += 1
 		  If RADIO_INTVL_count >= RADIO_INTVL_mult Then

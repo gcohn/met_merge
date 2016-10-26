@@ -1,5 +1,5 @@
 ' CR1000 Series Datalogger
-' Program name: UPLO_236_V07.CR1
+' Program name: UPLO_236_V08CR1
 '
 ' Version 1 Created on 9-15-15 by JM
 ' Version 2 Modified on 11-23-15 by JM,SW & AK
@@ -42,7 +42,7 @@ PreserveVariables
 Public LOGGERID
 Public PROGID As Long
 Public PROG_VERS = 8
-Public BATTERY_V_CHECK
+Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
 Public REF_TEMP
 
@@ -53,9 +53,9 @@ Public SR50(2)
 Public TEMP_CORR_DISTANCE
 Public SNOW_INITIAL_DISTANCE = 5.6
 Public AIR_TEMP
-Public SNOWDEPTH_CHECK
+Public SNOWDEPTH_CHECK = NAN
 Public SNOWDEPTH
-Public SWE_CHECK
+Public SWE_CHECK = NAN
 Public CS451(2)
 Public SNOW_TARE
 
@@ -182,13 +182,16 @@ DataTable(Table105,true,-1)
   Sample (1,PROGID,Long)
   Sample (1,SH_PRECIP,FP2)
   Sample (1,SWE,FP2)
+  Sample (1, SWE_CHECK, FP2)
   Sample (1,SNOWDEPTH,FP2)
+  Sample (1, SNOWDEPTH_CHECK, FP2)
   Sample (1,QUALITY,FP2)
   Sample (1,BP_mb,IEEE4)
   Totalize (1,TIPPING_B,FP2,0)
   Average (1,SH_TEMP,FP2,0)
   Average (1,SOLAR_Wm2,FP2,0)
   Average (1,BATTERY_V,FP2,0) 
+  Sample (1, BATTERY_V_CHECK, FP2)
   Maximum (1,SOLAR_Wm2,FP2,False,0)
   
 EndTable
