@@ -1,4 +1,4 @@
-'Program name: CENT_233_V05.CR3
+'Program name: CENT_233_V06.CR3
 'Date written: 4-16-15 by AK
 
 'Modifications:  
@@ -38,7 +38,7 @@ Public LOGGERID
 Public PROGID As Long
 Public PROG_VERS = 6
 Public REF_TEMP
-Public BATTERY_V_CHECK
+Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
 
 Public HMP_150(3) As Float
@@ -273,9 +273,9 @@ EndTable
 '
 'MEASURE GILL WINDOBSERVER II SONIC ANAMOMETER
 BeginProg
-  SW12 (1,0)
+  'SW12 (1,0)
   Delay (1,5,Sec)
-  SW12 (1,1)
+  'SW12 (1,1)
   SerialOpen (Com1,9600,16,0,100)
   SerialFlush(Com1)
   Delay (1,5,Sec)
@@ -303,9 +303,9 @@ BeginProg
     EndIf
     Vh  =  SQR(Ux^2+Uy^2)
     If nan_flag > 1 Then
-      SW12 (1,0)
+      'SW12 (1,0)
       Delay (1,5,Sec)
-      SW12 (1,1)
+      'SW12 (1,1)
       SerialClose (Com1)
       Delay (1,5,Sec)
       SerialOpen (Com1,9600,16,0,100)
@@ -315,19 +315,21 @@ BeginProg
     '
     'MEASURE WIND SPEED
     PulseCount(WINDSPEED,1,1,1,1,coef_WINDSPEED,0)
+    'MEASURE ASPIRATED FAN SPEED PER MINUTE
+	   coef_ASP_SPEED = 1/(15/60)
+	   PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
+	   
   NextScan
 
   SlowSequence
   Scan(SCAN_INTERVAL_SLOW,Sec, 0, 0)
     '
-    'MEASURE 1.5M & 4.5M HMP45C'S
-    SW12 (2,1)
+    'MEASURE 1.5M & 4.5M HMP45C'S   
     Delay(0,150,mSec)
     VoltDiff(AIR_150,1,mv1000,1,0,0,_60Hz,coef_AIR_150,offset_AIR_150)
     VoltDiff(RH_150,1,mv1000,2,0,0,_60Hz,coef_RH_150,0)
     VoltDiff(AIR_450,1,mv1000,3,0,0,_60Hz,coef_AIR_450,offset_AIR_150)
     VoltDiff(RH_450,1,mv1000,4,0,0,_60Hz,coef_RH_450,0)
-    SW12 (2,0)
     '
     'MEASURE 4 SOIL TEMPS
     Therm107(SOILT,4,9,VX1,0,_60Hz,1,0)
@@ -348,9 +350,6 @@ BeginProg
     '
     'MEASURE 3.5M ASPIRATED AIR TEMP
     Therm107(ASP_350,1,20,VX3,0,_60Hz,1,0)
-    'MEASURE ASPIRATED FAN SPEED PER MINUTE
-	   coef_ASP_SPEED = 1/(15/60)
-	   PulseCount(ASP_SPEED,1,2,0,0,coef_ASP_SPEED,0)
     '
     'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
@@ -421,12 +420,12 @@ BeginProg
       RADIO_PWR = False
     EndIf
     
+    SW12(2, ASP_PWR)
     If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL,min) Then
       RADIO_INTVL_count += 1
     If RADIO_INTVL_count >= RADIO_INTVL_mult Then
       SW12(1,RADIO_PWR)
-      EthernetPower(RADIO_PWR)
-      SW12(2, ASP_PWR)			  
+      EthernetPower(RADIO_PWR)			  
       RADIO_INTVL_count = 0
       Timer (3,Sec,2)
     EndIf
