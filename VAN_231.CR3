@@ -55,7 +55,7 @@ Public LOGGERID
 Public PROGID as Long
 Public PROG_VERS = 8.3
 Public REF_TEMP
-Public BATTERY_V_CHECK
+Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
 
 Public HMP_150(3) As Float
@@ -75,9 +75,9 @@ Public WIND_DIR
 Public SR50(2)
 Public TEMP_CORR_DISTANCE
 Public SNOW_INITIAL_DISTANCE = 5.03
-Public SNOWDEPTH_CHECK
+Public SNOWDEPTH_CHECK = NAN
 Public SNOWDEPTH
-Public SNOW_PILL_CHECK
+Public SNOW_PILL_CHECK = NAN
 Public SNOW_PILL
 Public SNOW_TARE
 
@@ -434,12 +434,12 @@ BeginProg
 		  RADIO_PWR = False
 	  EndIf
 		 
+    SW12(2, ASP_PWR)
 	  If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL,min) Then
 		  RADIO_INTVL_count += 1
 		  If RADIO_INTVL_count >= RADIO_INTVL_mult Then
 			  SW12(1,RADIO_PWR)
-			  EthernetPower(RADIO_PWR)
-			  SW12(2, ASP_PWR)			  
+			  EthernetPower(RADIO_PWR)			  
 		    RADIO_INTVL_count = 0
 			Timer (3,Sec,2)
 		  EndIf
