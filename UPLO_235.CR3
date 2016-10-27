@@ -1,4 +1,4 @@
-'Program name: UPLO_235_V08.CR3
+'Program name: UPLO_235_V08.1.CR3
 '
 ' Version 1 written: 9-11-15 by JM & SW  
 ' Version 2 created on 9-11-15
@@ -37,6 +37,8 @@
   ' Added automated power saving protocol to shut off radio and ASP during low power
   ' Added advanced power tracking
   ' Standardazed public table display for easier reading of program and keypad.
+' Version 8.1 debug October 2016 by GC
+  ' Fixed compile error and added check values to Table105
 
 Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
 Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
@@ -49,7 +51,7 @@ PreserveVariables
 '\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=8
+Public PROG_VERS=8.1
 Public REF_TEMP
 Public BATTERY_V_CHECK = NAN
 Public BATTERY_V

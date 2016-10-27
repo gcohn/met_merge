@@ -1,5 +1,5 @@
 ' CR1000 Series Datalogger
-' Program name: UPLO_236_V08CR1
+' Program name: UPLO_236_V08.1.CR1
 '
 ' Version 1 Created on 9-15-15 by JM
 ' Version 2 Modified on 11-23-15 by JM,SW & AK
@@ -29,6 +29,8 @@
   ' Added automated power saving protocol to shut off radio and ASP during low power
   ' Added advanced power tracking
   ' Standardazed public table display for easier reading of program and keypad.
+' Version 8.1 debug October 2016 by GC
+  ' Fixed compile error and added check values to Table105
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
@@ -41,7 +43,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS = 8
+Public PROG_VERS = 8.1
 Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
 Public REF_TEMP
