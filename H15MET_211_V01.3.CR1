@@ -8,9 +8,10 @@
 ' 1. Version 1.2 Created on 4/13/2017
   ' Removed RH, Dewpoint, VPD calculations and subroutines from program. 
   ' Removed 15min, 60min and daily summary tables from output.
-' 2. Version 1.3 Created on 4/13/2017
-  ' Added new version becuase 1.2 lost comm with Source Tree. 
   ' TO DO: Replace calls to HMP45C with 107 sensors. 
+' 2. Version 1.3 Created on 4/13/2017
+  ' Added new version because 1.2 lost comm with Source Tree. 
+  ' Added 107 calls, panel temp, _Check variables. Good compile. 
   
      
 ' Set LoggerID value
