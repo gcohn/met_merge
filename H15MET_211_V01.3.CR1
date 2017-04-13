@@ -13,6 +13,7 @@
 ' Added new version because 1.2 lost comm with Source Tree.
 ' Added 107 calls, panel temp, _Check variables. Good compile.
 ' Corrected diff, SE, P1, and VX channels in program calls
+' Added TableName.Output to end of program to replace TimeIntoInterval to write _check values to maint table. 
 
 
 ' Set LoggerID value
