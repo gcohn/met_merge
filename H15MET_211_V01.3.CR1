@@ -11,7 +11,8 @@
   ' TO DO: Replace calls to HMP45C with 107 sensors. 
 ' 2. Version 1.3 Created on 4/13/2017
   ' Added new version because 1.2 lost comm with Source Tree. 
-  ' Added 107 calls, panel temp, _Check variables. Good compile. 
+  ' Added 107 calls, panel temp, _Check variables. Good compile.
+  ' Corrected diff, SE, P1, and VX channels in program calls
   
      
 ' Set LoggerID value
@@ -73,11 +74,11 @@ BeginProg
 		'MEASURE AIR TEMPERATURES (THERMISTORS)
 		Therm107(AIR_TEMP,2,1,1,0,_60Hz,1,0)
 'MEASURE RAINGAGE TRANSDUCER
-    BrFull(PRECIP_PR, 1, mV7_5, 5, VX3, 1, 2500, true, true, 0, 250, 12.409, 0)
+    BrFull(PRECIP_PR, 1, mV7_5,2,2, 1, 2500, true, true, 0, 250, 12.409, 0)
 'COUNT TIPPING BUCKET
-    PulseCount(TIPPING_B, 1, 2, 2, 0, 1, 0)     
+    PulseCount(TIPPING_B, 1,1, 2, 0, 1, 0)
 'MEASURE STEVENS PAT
-    BrHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False,50000, 250, 2500, 0)
+    BrHalf(PAT, 1, mV2500,5,3, 1, 2500, False,50000, 250, 2500, 0)
 
 'PART 2: PROCESS DATA
 'COMPUTE TOTAL TIPS
