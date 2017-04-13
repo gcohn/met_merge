@@ -3,6 +3,7 @@
 'Program for A35, PAT, and assocated sensors at H15MET
 
 'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000 
+'Modifications:
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -14,16 +15,14 @@ PreserveVariables
 
 'Declare Public Variables
 public i1
-Public WIND_DIR
-Public WINDSPEED
 Public AIR_150(2)
 Public RH_150(2)
-Public DEWPT_150
-Public DEWPT_450
-Public VAPDEF150
-Public VAPDEF450
-Public TEMP1
-Public TEMP2
+Public DEWPT_150 'remove
+Public DEWPT_450 'remove
+Public VAPDEF150 'remove
+Public VAPDEF450 'remove
+Public TEMP1 
+Public TEMP2 
 Public TEMP3
 Public TEMP4
 Public TEMP5
@@ -61,7 +60,6 @@ DataTable(Table105,true,-1)
   Average(1, DEWPT_450, FP2, 0)
   Average(1, VAPDEF150, FP2, 0)
   Average(1, VAPDEF450, FP2, 0)
-  WindVector(1, WINDSPEED, WIND_DIR, FP2, 0, 30, 0, 2) 
   Sample(1, PRECIP_PR, FP2)
   Totalize(1, TIPPING_B, FP2, 0)
   Sample(1, PAT, FP2)         
@@ -76,15 +74,13 @@ DataTable(Table115,true,-1)
   Average(1, DEWPT_150, FP2, 0)
   Average(1, DEWPT_450, FP2, 0)
   Average(1, VAPDEF150, FP2, 0)
-  Average(1, VAPDEF450, FP2, 0)
-  WindVector(1, WINDSPEED, WIND_DIR, FP2, 0, 30, 0, 2)           
+  Average(1, VAPDEF450, FP2, 0)      
 EndTable
 DataTable(Table160,true,-1)
   OpenInterval       
   DataInterval(0,60,Min,10)                   
   Sample(1, LOGGERID, FP2)
-  Sample(1, PROGID, FP2)
-  WindVector(1, WINDSPEED, WIND_DIR, FP2, 0, 30, 0, 2)           
+  Sample(1, PROGID, FP2)          
   Average(2, AIR_150, FP2, 0)
   Average(2, RH_150, FP2, 0)
   Average(1, DEWPT_150, FP2, 0)
@@ -96,16 +92,13 @@ DataTable(Table440,true,-1)
   OpenInterval       
   DataInterval(0,1440,Min,10)                   
   Sample(1, LOGGERID, FP2)
-  Sample(1, PROGID, FP2)
-  WindVector(1, WINDSPEED, WIND_DIR, FP2, 0, 30, 0, 2)           
-  Histogram(WIND_DIR, FP2, 0, 8, 011,  WINDSPEED, 0, 360)         
+  Sample(1, PROGID, FP2)                  
   Average(2, AIR_150, FP2, 0)
   Average(2, RH_150, FP2, 0)
   Average(1, DEWPT_150, FP2, 0)
   Average(1, DEWPT_450, FP2, 0)
   Average(1, VAPDEF150, FP2, 0)
   Average(1, VAPDEF450, FP2, 0)
-  Maximum(1, WINDSPEED, FP2, 0, True)
   Maximum(2, AIR_150, FP2, 0, True)
   Maximum(2, RH_150, FP2, 0, True)
   Maximum(1, DEWPT_150, FP2, 0, True)
@@ -156,11 +149,7 @@ BeginProg
 'MEASURE 1.5M AND 4.5M RELATIVE HUMIDITYS
     VoltDiff(RH_150, 2, mV2500, 3, true, 0, 250, 0.1, 0) 
 'TURN OFF BOTH HMP45AC'S
-    PortSet(5, 0)              
-'MEASURE WIND DIRECTION
-    BRHalf(WIND_DIR, 1, mV2500, 11, VX1, 1, 2500, False, 20000, 250, 355, 0) 
-'MEASURE WIND SPEED
-    PulseCount(WINDSPEED, 1, 1, 1, 0, 0.0098, 0)     
+    PortSet(5, 0)                
 'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
 'PART 2: PROCESS DATA
@@ -190,7 +179,7 @@ BeginProg
 'COUNT TIPPING BUCKET
     PulseCount(TIPPING_B, 1, 2, 2, 0, 1, 0)     
 'MEASURE STEVENS PAT
-    BRHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False, 100000, 250, 2500, 0) 
+    BRHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False,50000, 250, 2500, 0)
 'MEASURE BATTERY VOLTAGE
     Battery(BATTERY_V)
 'PART 2: PROCESS DATA
@@ -204,7 +193,6 @@ BeginProg
     If  TimeIntoInterval(0,1,Min) Then                             
       PROGID=Status.ProgSignature(1,1)
     EndIf
- 
 '5 MINUTE OUTPUT
     CallTable Table105    
 '15 MINUTE OUTPUT
