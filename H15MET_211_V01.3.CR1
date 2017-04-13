@@ -1,5 +1,6 @@
 'CR1000 Series Datalogger
 'Program name: H15MET_211_V01.3.CR1
+'Author: GCohn, AMKennedy
 'Program for A35, PAT, and assocated sensors at H15MET
 
 'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000 
@@ -7,83 +8,75 @@
 ' 1. Version 1.2 Created on 4/13/2017
   ' Removed RH, Dewpoint, VPD calculations and subroutines from program. 
   ' Removed 15min, 60min and daily summary tables from output.
-  2. Version 1.3 Created on 4/13/2017
+' 2. Version 1.3 Created on 4/13/2017
   ' Added new version becuase 1.2 lost comm with Source Tree. 
   ' TO DO: Replace calls to HMP45C with 107 sensors. 
   
-  
-
-
-'PROGRAM VARIABLES
-'////////////////////////////////////////////////////         
-'Declare Constant Variable
+     
+' Set LoggerID value
 Const LID              = 211
 
 'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
 PreserveVariables
 
-'Declare Public Variables
-Public AIR_150(2)
+'\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
+
+Public AIR_TEMP(2)
+Public AIR_TEMP_Check
+Public REF_TEMP
 Public PRECIP_PR
 Public TIPPING_B
 Public TOTAL_TIP
 Public BATTERY_V
+Public BATTERY_V_Check
 Public PAT
 Public LOGGERID
-Public PROGID
+Public PROGID As Long
+'Public PROG_VERS = 1.3
 
-'Declare Public Units
+Alias AIR_TEMP(1)  = AIR_150
+Alias AIR_TEMP(2)  = AIR_450
+
+Units AIR_TEMP        = Deg C
+Units REF_TEMP        = Deg C
 Units LOGGERID        = number
 Units PROGID          = number
-Units BATTERY_V       = volts
-
-Alias AIR_150(2)=AIR_450
-
-'Declare Other Variables
-'Example:
-'Dim Counter
+Units BATTERY_V       = Volts
 
 'Define Data Tables.
-DataTable(Table105,true,-1)
-  OpenInterval       
+DataTable(Table105,true,-1)    
   DataInterval(0,5,Min,10)
+  TableFile("USB:H15MET_211_Table105",8,-1,0,0,Hr,0,0)
   Sample(1, LOGGERID, FP2)
-  Sample(1, PROGID, FP2)
-  Average(2, AIR_150, FP2, 0)
-  Minimum(2, AIR_150, FP2, 0,False)
-  Maximum(2, AIR_150, FP2, 0,False)
-  Sample(1, PRECIP_PR, FP2)
-  Sample(1, PAT, FP2) 
-  Totalize(1, TIPPING_B, FP2, 0)        
+  Sample(1,PROGID,Long)
+  Sample(1,AIR_TEMP_Check,FP2)
+  Average(2,AIR_TEMP,FP2,False)
+  Maximum(2,AIR_TEMP,FP2,False,0)
+  Minimum(2,AIR_TEMP,FP2,False,0)
+  Sample(1,BATTERY_V_Check,FP2)
+  Average(1,BATTERY_V,FP2,False)
+  Minimum(1,BATTERY_V,FP2,False,False)
+  Sample(1,PRECIP_PR, FP2)
+  Sample(1,PAT, FP2) 
+  Totalize(1,TIPPING_B, FP2, 0)        
 EndTable
 
-'Define Subroutines
+'\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 
-'Main Program
 BeginProg
-	Scan (10,Sec,3,0)
-		'PART 1: MEASURE SENSORS
-'TURN ON BOTH HMP45C'S
-    PortSet(5, 1)              
-'PAUSE FOR 150 mSEC FOR INSTRUMENTS TO STABILIZE
-    Delay(0,150,MSEC)
-'MEASURE 1.5M AND 4.5M AIR TEMPERATURES
-    VoltDiff(AIR_150, 2, mV2500, 1, true, 0, 250, 0.1, -40) 
-'TURN OFF BOTH HMP45AC'S
-    PortSet(5, 0)                
-'MEASURE BATTERY VOLTAGE
-    Battery(BATTERY_V)
-'PART 2: PROCESS DATA
-
-'PART 1: MEASURE SENSORS
+	Scan (10,Sec,1,0)
+		'MEASURE BATTERY VOLTAGE
+		Battery(BATTERY_V)
+		'MEASURE REFERENCE TEMPERATURE
+		PanelTemp(REF_TEMP,_60Hz)   
+		'MEASURE AIR TEMPERATURES (THERMISTORS)
+		Therm107(AIR_TEMP,2,1,1,0,_60Hz,1,0)
 'MEASURE RAINGAGE TRANSDUCER
-    BRFull(PRECIP_PR, 1, mV7_5, 5, VX3, 1, 2500, true, true, 0, 250, 12.409, 0)
+    BrFull(PRECIP_PR, 1, mV7_5, 5, VX3, 1, 2500, true, true, 0, 250, 12.409, 0)
 'COUNT TIPPING BUCKET
     PulseCount(TIPPING_B, 1, 2, 2, 0, 1, 0)     
 'MEASURE STEVENS PAT
-    BRHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False,50000, 250, 2500, 0)
-'MEASURE BATTERY VOLTAGE
-    Battery(BATTERY_V)
+    BrHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False,50000, 250, 2500, 0)
 
 'PART 2: PROCESS DATA
 'COMPUTE TOTAL TIPS
@@ -99,7 +92,11 @@ BeginProg
     EndIf
 
 '5 MINUTE OUTPUT
-    CallTable Table105    
+    CallTable Table105
+    If TimeIntoInterval (0,5,Min)
+      BATTERY_V_Check = NAN
+      AIR_TEMP_Check = NAN
+    EndIf 
 	NextScan
 EndProg
 
