@@ -58,14 +58,16 @@ DataTable(Table105,true,-1)
   Sample(1,BATTERY_V_Check,FP2)
   Average(1,BATTERY_V,FP2,False)
   Minimum(1,BATTERY_V,FP2,False,False)
-  Sample(1,PRECIP_PR, FP2)
-  Sample(1,PAT, FP2) 
-  Totalize(1,TIPPING_B, FP2, 0)        
+  Sample(1,PRECIP_PR,FP2)
+  Sample(1,PAT,FP2)
+  Totalize(1,TIPPING_B,FP2,0)
 EndTable
 
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 
 BeginProg
+BATTERY_V_Check = NAN 'initialize Nan
+AIR_TEMP_Check = NAN  'initialize Nan
 	Scan (10,Sec,1,0)
 		'MEASURE BATTERY VOLTAGE
 		Battery(BATTERY_V)
