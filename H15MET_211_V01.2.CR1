@@ -4,6 +4,12 @@
 
 'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000 
 'Modifications:
+' 1. Version 1.2 Created on 4/13/2017
+  ' Removed RH, Dewpoint, VPD calculations and subroutines from program. 
+  ' Removed 15min, 60min and daily summary tables from output.
+  ' TO DO: Replace calls to HMP45C with 107 sensors. 
+  
+
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -47,30 +53,6 @@ DataTable(Table105,true,-1)
   Sample(1, PAT, FP2) 
   Totalize(1, TIPPING_B, FP2, 0)        
 EndTable
-'DataTable(Table115,true,-1)
-'  OpenInterval       
-'  DataInterval(0,15,Min,10)                   
-'  Sample(1, LOGGERID, FP2)
-'  Sample(1, PROGID, FP2)
-'  Average(2, AIR_150, FP2, 0)
-'EndTable
-'DataTable(Table160,true,-1)
-'  OpenInterval       
-'  DataInterval(0,60,Min,10)                   
-'  Sample(1, LOGGERID, FP2)
-'  Sample(1, PROGID, FP2)          
-'  Average(2, AIR_150, FP2, 0)
-'EndTable
-'DataTable(Table440,true,-1)
-'  OpenInterval       
-'  DataInterval(0,1440,Min,10)                   
-'  Sample(1, LOGGERID, FP2)
-'  Sample(1, PROGID, FP2)                  
-'  Average(2, AIR_150, FP2, 0)
-'  Maximum(2, AIR_150, FP2, 0, True)
-'  Minimum(2, AIR_150, FP2, 0, True)
-'  Totalize(1, TIPPING_B, FP2, 0)
-'EndTable
 
 'Define Subroutines
 
@@ -115,12 +97,6 @@ BeginProg
 
 '5 MINUTE OUTPUT
     CallTable Table105    
-'15 MINUTE OUTPUT
-    CallTable Table115 
-'60 MINUTE OUTPUT
-    CallTable Table160 
-'DAILY OUTPUT
-    CallTable Table440 
 	NextScan
 EndProg
 
