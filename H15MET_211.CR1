@@ -1,5 +1,6 @@
 'CR1000 Series Datalogger
-'Program name: H15MET_211_V01.1.CR1
+'Program name: H15MET_211_V01.3.CR1
+'Author: GCohn, AMKennedy
 'Program for A35, PAT, and assocated sensors at H15MET
 
 'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000 
@@ -19,6 +20,7 @@ Public PRECIP_PR
 Public TIPPING_B
 Public TOTAL_TIP
 Public BATTERY_V
+Public BATTERY_V_Check
 Public PAT
 Public LOGGERID
 Public PROGID
@@ -36,7 +38,6 @@ Alias AIR_150(2)=AIR_450
 
 'Define Data Tables.
 DataTable(Table105,true,-1)
-  OpenInterval       
   DataInterval(0,5,Min,10)
   Sample(1, LOGGERID, FP2)
   Sample(1, PROGID, FP2)
@@ -47,34 +48,9 @@ DataTable(Table105,true,-1)
   Sample(1, PAT, FP2) 
   Totalize(1, TIPPING_B, FP2, 0)        
 EndTable
-'DataTable(Table115,true,-1)
-'  OpenInterval       
-'  DataInterval(0,15,Min,10)                   
-'  Sample(1, LOGGERID, FP2)
-'  Sample(1, PROGID, FP2)
-'  Average(2, AIR_150, FP2, 0)
-'EndTable
-'DataTable(Table160,true,-1)
-'  OpenInterval       
-'  DataInterval(0,60,Min,10)                   
-'  Sample(1, LOGGERID, FP2)
-'  Sample(1, PROGID, FP2)          
-'  Average(2, AIR_150, FP2, 0)
-'EndTable
-'DataTable(Table440,true,-1)
-'  OpenInterval       
-'  DataInterval(0,1440,Min,10)                   
-'  Sample(1, LOGGERID, FP2)
-'  Sample(1, PROGID, FP2)                  
-'  Average(2, AIR_150, FP2, 0)
-'  Maximum(2, AIR_150, FP2, 0, True)
-'  Minimum(2, AIR_150, FP2, 0, True)
-'  Totalize(1, TIPPING_B, FP2, 0)
-'EndTable
 
 'Define Subroutines
 
-'Main Program
 BeginProg
 	Scan (10,Sec,3,0)
 		'PART 1: MEASURE SENSORS
@@ -103,13 +79,13 @@ BeginProg
 'PART 2: PROCESS DATA
 'COMPUTE TOTAL TIPS
     TOTAL_TIP = TIPPING_B + TOTAL_TIP
-'CHANGE TIPS TO INCHS
+    'CHANGE TIPS TO INCHS
     TIPPING_B = TIPPING_B * 0.01
 
-'SET LOGGERID TO LID defined at top
+    'SET LOGGERID TO LID defined at top
     LOGGERID = LID
-'RECORD SIGNATURE AS PROGID
-    If  TimeIntoInterval(0,1,Min) Then                             
+    'RECORD SIGNATURE AS PROGID
+    If  TimeIntoInterval(0,1,Min) Then
       PROGID=Status.ProgSignature(1,1)
     EndIf
 
