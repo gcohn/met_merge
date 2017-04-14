@@ -1,0 +1,126 @@
+'CR1000 Series Datalogger
+'Program name: H15MET_211_V01.1.CR1
+'Program for A35, PAT, and assocated sensors at H15MET
+
+'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000 
+'Modifications:
+
+'PROGRAM VARIABLES
+'////////////////////////////////////////////////////         
+'Declare Constant Variable
+Const LID              = 211
+
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
+
+'Declare Public Variables
+Public AIR_150(2)
+Public PRECIP_PR
+Public TIPPING_B
+Public TOTAL_TIP
+Public BATTERY_V
+Public PAT
+Public LOGGERID
+Public PROGID
+
+'Declare Public Units
+Units LOGGERID        = number
+Units PROGID          = number
+Units BATTERY_V       = volts
+
+Alias AIR_150(2)=AIR_450
+
+'Declare Other Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables.
+DataTable(Table105,true,-1)
+  OpenInterval       
+  DataInterval(0,5,Min,10)
+  Sample(1, LOGGERID, FP2)
+  Sample(1, PROGID, FP2)
+  Average(2, AIR_150, FP2, 0)
+  Minimum(2, AIR_150, FP2, 0,False)
+  Maximum(2, AIR_150, FP2, 0,False)
+  Sample(1, PRECIP_PR, FP2)
+  Sample(1, PAT, FP2) 
+  Totalize(1, TIPPING_B, FP2, 0)        
+EndTable
+'DataTable(Table115,true,-1)
+'  OpenInterval       
+'  DataInterval(0,15,Min,10)                   
+'  Sample(1, LOGGERID, FP2)
+'  Sample(1, PROGID, FP2)
+'  Average(2, AIR_150, FP2, 0)
+'EndTable
+'DataTable(Table160,true,-1)
+'  OpenInterval       
+'  DataInterval(0,60,Min,10)                   
+'  Sample(1, LOGGERID, FP2)
+'  Sample(1, PROGID, FP2)          
+'  Average(2, AIR_150, FP2, 0)
+'EndTable
+'DataTable(Table440,true,-1)
+'  OpenInterval       
+'  DataInterval(0,1440,Min,10)                   
+'  Sample(1, LOGGERID, FP2)
+'  Sample(1, PROGID, FP2)                  
+'  Average(2, AIR_150, FP2, 0)
+'  Maximum(2, AIR_150, FP2, 0, True)
+'  Minimum(2, AIR_150, FP2, 0, True)
+'  Totalize(1, TIPPING_B, FP2, 0)
+'EndTable
+
+'Define Subroutines
+
+'Main Program
+BeginProg
+	Scan (10,Sec,3,0)
+		'PART 1: MEASURE SENSORS
+'TURN ON BOTH HMP45C'S
+    PortSet(5, 1)              
+'PAUSE FOR 150 mSEC FOR INSTRUMENTS TO STABILIZE
+    Delay(0,150,MSEC)
+'MEASURE 1.5M AND 4.5M AIR TEMPERATURES
+    VoltDiff(AIR_150, 2, mV2500, 1, true, 0, 250, 0.1, -40) 
+'TURN OFF BOTH HMP45AC'S
+    PortSet(5, 0)                
+'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+'PART 2: PROCESS DATA
+
+'PART 1: MEASURE SENSORS
+'MEASURE RAINGAGE TRANSDUCER
+    BRFull(PRECIP_PR, 1, mV7_5, 5, VX3, 1, 2500, true, true, 0, 250, 12.409, 0)
+'COUNT TIPPING BUCKET
+    PulseCount(TIPPING_B, 1, 2, 2, 0, 1, 0)     
+'MEASURE STEVENS PAT
+    BRHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False,50000, 250, 2500, 0)
+'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+
+'PART 2: PROCESS DATA
+'COMPUTE TOTAL TIPS
+    TOTAL_TIP = TIPPING_B + TOTAL_TIP
+'CHANGE TIPS TO INCHS
+    TIPPING_B = TIPPING_B * 0.01
+
+'SET LOGGERID TO LID defined at top
+    LOGGERID = LID
+'RECORD SIGNATURE AS PROGID
+    If  TimeIntoInterval(0,1,Min) Then                             
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+
+'5 MINUTE OUTPUT
+    CallTable Table105    
+'15 MINUTE OUTPUT
+    CallTable Table115 
+'60 MINUTE OUTPUT
+    CallTable Table160 
+'DAILY OUTPUT
+    CallTable Table440 
+	NextScan
+EndProg
+
