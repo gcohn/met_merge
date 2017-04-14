@@ -3,20 +3,23 @@
 'Author: GCohn, AMKennedy
 'Program for A35, PAT, and assocated sensors at H15MET
 
-'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000 
+'Version 1.1 Created on 4/13/2017 FOR UPGRADE from CR10X Pair to single CR1000
 'Modifications:
 ' 1. Version 1.2 Created on 4/13/2017
-  ' Removed RH, Dewpoint, VPD calculations and subroutines from program. 
-  ' Removed 15min, 60min and daily summary tables from output.
+' Removed RH, Dewpoint, VPD calculations and subroutines from program.
+' Removed 15min, 60min and daily summary tables from output.
+' TO DO: Replace calls to HMP45C with 107 sensors.
 ' 2. Version 1.3 Created on 4/13/2017
-  ' Added new version becuase 1.2 lost comm with Source Tree. 
-  ' TO DO: Replace calls to HMP45C with 107 sensors. 
-  
-     
+' Added new version because 1.2 lost comm with Source Tree.
+' Added 107 calls, panel temp, _Check variables. Good compile.
+' Corrected diff, SE, P1, and VX channels in program calls
+' Added TableName.Output to end of program to replace TimeIntoInterval to write _check values to maint table. 
+
+
 ' Set LoggerID value
 Const LID              = 211
 
-'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss.
 PreserveVariables
 
 '\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
@@ -44,7 +47,7 @@ Units PROGID          = number
 Units BATTERY_V       = Volts
 
 'Define Data Tables.
-DataTable(Table105,true,-1)    
+DataTable(Table105,true,-1)
   DataInterval(0,5,Min,10)
   TableFile("USB:H15MET_211_Table105",8,-1,0,0,Hr,0,0)
   Sample(1, LOGGERID, FP2)
@@ -56,47 +59,49 @@ DataTable(Table105,true,-1)
   Sample(1,BATTERY_V_Check,FP2)
   Average(1,BATTERY_V,FP2,False)
   Minimum(1,BATTERY_V,FP2,False,False)
-  Sample(1,PRECIP_PR, FP2)
-  Sample(1,PAT, FP2) 
-  Totalize(1,TIPPING_B, FP2, 0)        
+  Sample(1,PRECIP_PR,FP2)
+  Sample(1,PAT,FP2)
+  Totalize(1,TIPPING_B,FP2,0)
 EndTable
 
 '\\\\\\\\\\\\\\\\\\\\\\\\\\\ PROGRAM ////////////////////////////
 
 BeginProg
-	Scan (10,Sec,1,0)
-		'MEASURE BATTERY VOLTAGE
-		Battery(BATTERY_V)
-		'MEASURE REFERENCE TEMPERATURE
-		PanelTemp(REF_TEMP,_60Hz)   
-		'MEASURE AIR TEMPERATURES (THERMISTORS)
-		Therm107(AIR_TEMP,2,1,1,0,_60Hz,1,0)
-'MEASURE RAINGAGE TRANSDUCER
-    BrFull(PRECIP_PR, 1, mV7_5, 5, VX3, 1, 2500, true, true, 0, 250, 12.409, 0)
-'COUNT TIPPING BUCKET
-    PulseCount(TIPPING_B, 1, 2, 2, 0, 1, 0)     
-'MEASURE STEVENS PAT
-    BrHalf(PAT, 1, mV2500, 1, VX1, 1, 2500, False,50000, 250, 2500, 0)
+  BATTERY_V_Check = NAN 'initialize Nan
+  AIR_TEMP_Check = NAN  'initialize Nan
+  Scan (10,Sec,1,0)
+    'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+    'MEASURE REFERENCE TEMPERATURE
+    PanelTemp(REF_TEMP,_60Hz)
+    'MEASURE AIR TEMPERATURES (THERMISTORS)
+    Therm107(AIR_TEMP,2,1,1,0,_60Hz,1,0)
+    'MEASURE RAINGAGE TRANSDUCER
+    BrFull(PRECIP_PR, 1, mV7_5,2,2, 1, 2500, true, true, 0, 250, 12.409, 0)
+    'COUNT TIPPING BUCKET
+    PulseCount(TIPPING_B, 1,1, 2, 0, 1, 0)
+    'MEASURE STEVENS PAT
+    BrHalf(PAT, 1, mV2500,5,3, 1, 2500, False,50000, 250, 2500, 0)
 
-'PART 2: PROCESS DATA
-'COMPUTE TOTAL TIPS
+    'PART 2: PROCESS DATA
+    'COMPUTE TOTAL TIPS
     TOTAL_TIP = TIPPING_B + TOTAL_TIP
-'CHANGE TIPS TO INCHS
+    'CHANGE TIPS TO INCHS
     TIPPING_B = TIPPING_B * 0.01
 
-'SET LOGGERID TO LID defined at top
+    'SET LOGGERID TO LID defined at top
     LOGGERID = LID
-'RECORD SIGNATURE AS PROGID
-    If  TimeIntoInterval(0,1,Min) Then                             
+    'RECORD SIGNATURE AS PROGID
+    If  TimeIntoInterval(0,1,Min) Then
       PROGID=Status.ProgSignature(1,1)
     EndIf
 
-'5 MINUTE OUTPUT
+    '5 MINUTE OUTPUT
     CallTable Table105
-    If TimeIntoInterval (0,5,Min)
+    If (Table105.Output(1,1)) Then
       BATTERY_V_Check = NAN
       AIR_TEMP_Check = NAN
-    EndIf 
-	NextScan
+    EndIf
+  NextScan
 EndProg
 
