@@ -81,7 +81,7 @@ BeginProg
     'COUNT TIPPING BUCKET
     PulseCount(TIPPING_B, 1,1, 2, 0, 1, 0)
     'MEASURE STEVENS PAT
-    BrHalf(PAT, 1, mV2500,5,3, 1, 2500, False,50000, 250, 2500, 0)
+    BrHalf(PAT, 1, mV2500,5,3, 1, 2500, False,50000, 250,1, 0)
 
     'PART 2: PROCESS DATA
     'COMPUTE TOTAL TIPS
