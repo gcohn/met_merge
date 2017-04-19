@@ -36,7 +36,7 @@ Public TOTAL_TIPS
 
 
 'Alias
-Alias AIR_TEMP(1)  = AIR_150
+Alias AIR_TEMP(1)  = SH_TEMP
 Alias AIR_TEMP(2)  = AIR_450
 
 
