@@ -41,14 +41,14 @@ Alias AIR_TEMP(2)  = AIR_450
 
 
 'Declare Public Units
-Units AIR_TEMP        = Deg C
-Units REF_TEMP        = Deg C
-Units SH_PRECIP_1     = Inches
-Units SH_PRECIP_2     = Inches
-Units TIPPING_B       = Inches
+Units AIR_TEMP        = deg C
+Units REF_TEMP        = deg C
+Units SH_PRECIP_1     = inches
+Units SH_PRECIP_2     = inches
+Units TIPPING_B       = inches
 Units LOGGERID        = number
 Units PROGID          = number
-Units BATTERY_V       = Volts
+Units BATTERY_V       = volts
 
 'SYSTEM Diagnostics
 '#######################################################
@@ -58,8 +58,8 @@ Units BATTERY_V       = Volts
 Public coef_SH_PRECIP_1 = 12.409
 Public offset_SH_PRECIP_1 = 0
 'PAT- Apr 2017
-'convert from feet to inches (* 1/12)
-Public coef_SH_PRECIP_2 = 0.001/12
+'convert from feet to inches (*12)
+Public coef_SH_PRECIP_2 = 0.001*12
 Public offset_SH_PRECIP_2 = 0
 'convert from tips to inches
 Public coef_TIPPING_B = 0.01
