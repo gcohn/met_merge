@@ -111,10 +111,10 @@ BeginProg
     Therm107(AIR_TEMP,2,1,1,0,_60Hz,1,0)
     '
     'MEASURE RAINGAGE TRANSDUCER
-    BrFull(SH_PRECIP_01, 1, mV7_5,2,2, 1, 2500, true, true, 0, 250,coef_SH_PRECIP_1, offset_SH_PRECIP_1)
+    BrFull(SH_PRECIP_01, 1, mV7_5,2,2, 1, 2500, true, true, 0, 250,coef_SH_PRECIP_01, offset_SH_PRECIP_01)
     '
     'MEASURE STEVENS PAT
-    BrHalf(SH_PRECIP_02, 1, mV2500,5,3, 1, 2500, False,50000, 250,coef_SH_PRECIP_2, offset_SH_PRECIP_2)
+    BrHalf(SH_PRECIP_02, 1, mV2500,5,3, 1, 2500, False,50000, 250,coef_SH_PRECIP_02, offset_SH_PRECIP_02)
     '
     'COUNT TIPPING BUCKET
     PulseCount(TIPPING_B, 1,1, 2, 0, coef_TIPPING_B, 0)
