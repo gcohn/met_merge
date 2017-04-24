@@ -25,8 +25,8 @@ Public REF_TEMP
 Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
 
-Public SH_PRECIP_1
-Public SH_PRECIP_2
+Public SH_PRECIP_01
+Public SH_PRECIP_02
 
 Public AIR_TEMP_CHECK = NAN
 Public AIR_TEMP(2)
@@ -43,8 +43,8 @@ Alias AIR_TEMP(2)  = AIR_450
 'Declare Public Units
 Units AIR_TEMP        = deg C
 Units REF_TEMP        = deg C
-Units SH_PRECIP_1     = millimeter
-Units SH_PRECIP_2     = millimeter
+Units SH_PRECIP_01     = millimeter
+Units SH_PRECIP_02     = millimeter
 Units TIPPING_B       = tips
 Units LOGGERID        = number
 Units PROGID          = number
@@ -55,12 +55,12 @@ Units BATTERY_V       = volts
 'SYS Table variables
 'COEF defenitions
 'Pressure Transducer- Apr 2017
-Public coef_SH_PRECIP_1 = 12.409*25.4
-Public offset_SH_PRECIP_1 = 0
+Public coef_SH_PRECIP_01 = 12.409*25.4
+Public offset_SH_PRECIP_01 = 0
 'PAT- Apr 2017
 'convert from feet to inches to mm (*12*25.4)
-Public coef_SH_PRECIP_2 = 0.001*12*25.4
-Public offset_SH_PRECIP_2 = 0
+Public coef_SH_PRECIP_02 = 0.001*12*25.4
+Public offset_SH_PRECIP_02 = 0
 'convert from tips to inches 0.01
 Public coef_TIPPING_B = 1
 
@@ -71,10 +71,10 @@ DataTable(SYS,true,-1)
   Sample (1,PROGID,Long)
   Sample (1,PROG_VERS,FP2)
   Minimum(1,BATTERY_V,FP2,False,False)
-  Sample(1,coef_SH_PRECIP_1,FP2)
-  Sample(1,offset_SH_PRECIP_1,FP2)  
-  Sample(1,coef_SH_PRECIP_2,FP2)
-  Sample(1,offset_SH_PRECIP_2,FP2)
+  Sample(1,coef_SH_PRECIP_01,FP2)
+  Sample(1,offset_SH_PRECIP_01,FP2)  
+  Sample(1,coef_SH_PRECIP_02,FP2)
+  Sample(1,offset_SH_PRECIP_02,FP2)
 EndTable
 
 '\\\\\\\\\\\\\\\\\\\\\\\\PROGRAM OUTPUT////////////////////////
@@ -90,8 +90,8 @@ DataTable(Table105,true,-1)
   Minimum(2,AIR_TEMP,FP2,False,0)
   Sample(1,BATTERY_V_Check,FP2)
   Average(1,BATTERY_V,FP2,False)
-  Sample(1,SH_PRECIP_1,FP2)
-  Sample(1,SH_PRECIP_2,FP2)
+  Sample(1,SH_PRECIP_01,FP2)
+  Sample(1,SH_PRECIP_02,FP2)
   Totalize(1,TIPPING_B,FP2,0)
 EndTable
 
@@ -111,10 +111,10 @@ BeginProg
     Therm107(AIR_TEMP,2,1,1,0,_60Hz,1,0)
     '
     'MEASURE RAINGAGE TRANSDUCER
-    BrFull(SH_PRECIP_1, 1, mV7_5,2,2, 1, 2500, true, true, 0, 250,coef_SH_PRECIP_1, offset_SH_PRECIP_1)
+    BrFull(SH_PRECIP_01, 1, mV7_5,2,2, 1, 2500, true, true, 0, 250,coef_SH_PRECIP_1, offset_SH_PRECIP_1)
     '
     'MEASURE STEVENS PAT
-    BrHalf(SH_PRECIP_2, 1, mV2500,5,3, 1, 2500, False,50000, 250,coef_SH_PRECIP_2, offset_SH_PRECIP_2)
+    BrHalf(SH_PRECIP_02, 1, mV2500,5,3, 1, 2500, False,50000, 250,coef_SH_PRECIP_2, offset_SH_PRECIP_2)
     '
     'COUNT TIPPING BUCKET
     PulseCount(TIPPING_B, 1,1, 2, 0, coef_TIPPING_B, 0)
