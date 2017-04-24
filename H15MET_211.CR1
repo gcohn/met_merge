@@ -43,9 +43,9 @@ Alias AIR_TEMP(2)  = AIR_450
 'Declare Public Units
 Units AIR_TEMP        = deg C
 Units REF_TEMP        = deg C
-Units SH_PRECIP_1     = inches
-Units SH_PRECIP_2     = inches
-Units TIPPING_B       = inches
+Units SH_PRECIP_1     = millimeter
+Units SH_PRECIP_2     = millimeter
+Units TIPPING_B       = tips
 Units LOGGERID        = number
 Units PROGID          = number
 Units BATTERY_V       = volts
@@ -55,14 +55,14 @@ Units BATTERY_V       = volts
 'SYS Table variables
 'COEF defenitions
 'Pressure Transducer- Apr 2017
-Public coef_SH_PRECIP_1 = 12.409
+Public coef_SH_PRECIP_1 = 12.409*25.4
 Public offset_SH_PRECIP_1 = 0
 'PAT- Apr 2017
-'convert from feet to inches (*12)
-Public coef_SH_PRECIP_2 = 0.001*12
+'convert from feet to inches to mm (*12*25.4)
+Public coef_SH_PRECIP_2 = 0.001*12*25.4
 Public offset_SH_PRECIP_2 = 0
-'convert from tips to inches
-Public coef_TIPPING_B = 0.01
+'convert from tips to inches 0.01
+Public coef_TIPPING_B = 1
 
 DataTable(SYS,true,-1)
   TableFile("USB:H15MET_211_SYS_",8,-1,0,0,Hr,0,0)
