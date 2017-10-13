@@ -396,6 +396,7 @@ BeginProg
     If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL,min) Then
       RADIO_INTVL_count += 1
     If RADIO_INTVL_count >= RADIO_INTVL_mult Then
+      SW12(RADIO_PWR)
       EthernetPower(RADIO_PWR)
       RADIO_INTVL_count = 0
       Timer (3,Sec,2)
