@@ -24,6 +24,8 @@
   ' Added automated power saving protocol to shut off radio and ASP during low power
   ' Added advanced power tracking
   ' Standardazed public table display for easier reading of program and keypad.
+' Version 6.1 Created October 2017 by GC
+  ' addes SW12V control to radio/power controls
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
@@ -36,7 +38,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=6
+Public PROG_VERS=6.1
 Public REF_TEMP
 Public BATTERY_V_CHECK
 Public BATTERY_V
