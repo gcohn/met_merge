@@ -50,7 +50,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=16.3
+Public PROG_VERS=16.31
 Public REF_TEMP
 Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
@@ -66,6 +66,7 @@ Public TEMP_CORR_DISTANCE
 Public SNOW_INITIAL_DISTANCE = 5.60
 Public SNOWDEPTH
 Public SNOWDEPTH_CHECK = NAN
+Public CS451(2)
 Public SWE
 Public SWE_CHECK = NAN
 Public SNOW_TARE = 10
@@ -74,6 +75,8 @@ Public SNOW_TARE = 10
 'Alias
 Alias SR50(1)= SNOW_RAW_DIST
 Alias SR50(2)= QUALITY
+Alias CS451(1)   = SWE
+Alias CS451(2)   = TEMP_C
 
 
 
@@ -288,8 +291,8 @@ BeginProg
     'MEASURE PUMPVOLTS
     VoltDiff (PUMPVOLTS,1,mV2500,3,True,0,_60Hz,0.01,0)
     '
-    'MEASURE SNOW PILLOW
-    BrFull (SWE,1,mV25,4,Vx3,1,1524,True,True,0,_60Hz,coef_SWE, 0)    
+    'MEASURE SNOW PILLOW   
+    SDI12Recorder(CS451,2,"0","M!",coef_SWE,0) 
     '
     'MEASURE SR50A SNOW DEPTH SENSOR
     If  TimeIntoInterval(0,300,Sec) Then   
