@@ -292,7 +292,7 @@ BeginProg
     VoltDiff (PUMPVOLTS,1,mV2500,3,True,0,_60Hz,0.01,0)
     '
     'MEASURE SNOW PILLOW   
-    SDI12Recorder(CS451,2,"0","M!",coef_SWE,0) 
+    SDI12Recorder(CS451,3,"0","M!",coef_SWE,0) 
     '
     'MEASURE SR50A SNOW DEPTH SENSOR
     If  TimeIntoInterval(0,300,Sec) Then   
