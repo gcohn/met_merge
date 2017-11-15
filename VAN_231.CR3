@@ -405,22 +405,22 @@ BeginProg
 		  RADIO_INTVL = RADIO_INTVL_pblc*60
 	  EndIf
 	  
-	  If BATTERY_V > BATT_CHRG_FULL Then
+	  If MAIN_BATT > BATT_CHRG_FULL Then
 	  	RADIO_INTVL_mult =  1
 		  ASP_PWR =  True
 		  RADIO_PWR = True
 		
-	  ElseIf BATTERY_V <= BATT_CHRG_FULL  AND BATTERY_V> BATT_CHRG_LOW Then
+	  ElseIf MAIN_BATT <= BATT_CHRG_FULL AND MAIN_BATT > BATT_CHRG_LOW Then
 		  RADIO_INTVL_mult = 2 
 		  ASP_PWR =  True
 		  RADIO_PWR = True
 		
-	  ElseIf BATTERY_V <= BATT_CHRG_LOW  AND BATTERY_V> BATT_CHRG_VERY_LOW Then
+	  ElseIf MAIN_BATT <= BATT_CHRG_LOW  AND MAIN_BATT > BATT_CHRG_VERY_LOW Then
 		  RADIO_INTVL_mult = 3
 		  ASP_PWR =  True
 		  RADIO_PWR = True
 		
-	  ElseIf BATTERY_V <= BATT_CHRG_VERY_LOW  AND BATTERY_V> BATT_CHRG_EMPTY Then
+	  ElseIf MAIN_BATT <= BATT_CHRG_VERY_LOW  AND MAIN_BATT > BATT_CHRG_EMPTY Then
 		  'If battery is very low, the radio will only transmit at 1600 (the counter 
 		  'is reset every night) 
       RADIO_INTVL = 16*60
@@ -429,7 +429,7 @@ BeginProg
 		  RADIO_INTVL_count = 0
 		  RADIO_PWR = True
 		
- 	  ElseIf BATTERY_V <= BATT_CHRG_EMPTY		
+ 	  ElseIf MAIN_BATT <= BATT_CHRG_EMPTY		
 		  ASP_PWR =  False
 		  RADIO_PWR = False
 	  EndIf
@@ -464,6 +464,7 @@ BeginProg
 		EndIf
 		
 	  If TimeIntoInterval(0,5,Min)
+        MAIN_BATT = PWR.BATTERY_V(1,12)  'create public variable from stored data 60min before radio power on
 		BATTERY_V_CHECK = NAN
 		SNOWDEPTH_CHECK = NAN
 		SNOW_PILL_CHECK = NAN
