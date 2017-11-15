@@ -38,6 +38,10 @@
      ' Added automated power saving protocol to shut off radio and ASP during low power
      ' Added advanced power tracking
      ' Standardazed public table display for easier reading of program and keypad.
+' Version 16.31 Created October 2017 by GC
+    ' Convert SWE pressure transducer measurement from Druck to Campbell CS451
+' Version 16.32 Created November 2017 by GC
+	' Fix errors in SWE pressure transducer conversion.
 
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////         
@@ -50,7 +54,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=16.31
+Public PROG_VERS=16.32
 Public REF_TEMP
 Public BATTERY_V_CHECK = NAN
 Public BATTERY_V
