@@ -1,0 +1,14 @@
+  Totalize (1,n,FP2,False)  'START OF SNOIC OUTPUT
+  FieldNames ("N_samples")
+  Totalize (1,n,FP2,diag<>0)
+  FieldNames ("N_samples_good")
+  Maximum (1,diag,FP2,diag_flag,false)
+  Minimum (1,sncstring_bytes,FP2,False,False)
+  Average (2,snc(1),FP2,stat_flag)
+  Average (1,snc(4),FP2,stat_flag)
+  StdDev (2,snc(1),FP2,stat_flag)
+  StdDev (1,snc(4),FP2,stat_flag)
+  WindVector (1,Uy,-Ux,FP2,stat_flag,SCAN_INTERVAL*60*OUTPUT_INTERVAL/6,1,0)
+  FieldNames ("SPD_mean,DIR_mean,DIR_std") ' field names for sonic data
+  Maximum (1,Vh,FP2,stat_flag,False)
+  FieldNames ("SPD_Gust_max")

@@ -1,0 +1,53 @@
+  'SONIC WIND SENSOR
+  '#############################################################
+  '
+  'MEASURE GILL WINDOBSERVER II SONIC ANAMOMETER
+  'SW12 (1,0)
+  Delay (1,5,Sec)
+  'SW12 (1,1)
+  SerialOpen (Com1,9600,16,0,100)
+  SerialFlush(Com1)
+  Delay (1,5,Sec)
+  nan_flag = 0
+  Scan (SCAN_INTERVAL_FAST,Sec,0,0)
+    SerialInRecord (Com1,sncstring,0,0,0,sncstring_bytes,01)
+    Delay (1,10,mSec)
+    SplitStr (snc(1),sncstring,",",5,4)
+    SerialFlush (Com1)
+    If diag = NaN Then
+      diag_flag = 1
+      stat_flag = 1
+      nan_flag = nan_flag + 1
+    ElseIf diag <> 0
+      diag_flag = 0
+      stat_flag = 1
+    ElseIf Ux = NaN OR Uy = NaN OR Ts = NaN
+      diag_flag = 0
+      stat_flag = 1
+      nan_flag = nan_flag + 1
+    Else
+      diag_flag = 0
+      stat_flag = 0
+      nan_flag = 0
+    EndIf
+    Vh  =  SQR(Ux^2+Uy^2)
+    If nan_flag > 1 Then
+      'SW12 (1,0)
+      Delay (1,5,Sec)
+      'SW12 (1,1)
+      SerialClose (Com1)
+      Delay (1,5,Sec)
+      SerialOpen (Com1,9600,16,0,100)
+      SerialFlush (Com1)
+      nan_flag = 0
+    EndIf
+    '
+    'MEASURE WIND SPEED
+    PulseCount(WINDSPEED,1,pchan_WINDSPEED,1,1,coef_WINDSPEED,offset_WINDSPEED)
+    'MEASURE ASPIRATED FAN SPEED PER MINUTE
+    coef_ASP_SPEED = 1/(15/60)
+    PulseCount(ASP_SPEED,1,pchan_ASP_SPEED,0,0,coef_ASP_SPEED,offset_ASP_SPEED)
+    
+  NextScan
+
+  SlowSequence

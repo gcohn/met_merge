@@ -1,0 +1,11 @@
+Dim SNOW_DIST_CORRECTION
+Dim SNOW_AIR_TEMP
+Dim SWE_RAW
+'------------/\Declare_Variable/\---------\/Table_Output\/--------------------
+  Sample(1,SNOW_INITIAL_DISTANCE,FP2)
+  Sample(1,SNOW_RAW_DIST,FP2)
+  Sample(1,SNOW_DIST_CORRECTION,FP2)
+  Sample(1,TEMP_CORR_DISTANCE,FP2)  
+  Sample(1,SNOW_AIR_TEMP,FP2)
+  Sample(1,SWE_RAW,FP2)
+  Sample(1,SNOW_TARE,FP2)

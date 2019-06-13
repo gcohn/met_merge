@@ -1,0 +1,7 @@
+'------------/\Declare_Variable/\---------\/Table_Output\/--------------------
+DataTable(SYS,true,-1)
+  TableFile("CRD:SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,5,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)

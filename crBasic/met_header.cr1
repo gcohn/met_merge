@@ -1,0 +1,26 @@
+'Program template: Benchmark Met Station
+'Author: Greg Cohn
+'Created: 5/3/2017
+'Legacy Development: John Moreau, Adam Kennedy
+'v0.1: Beta testing and development of composite program
+
+Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
+Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
+Const OUTPUT_INTERVAL    = 5   'Output interval in minutes
+' Set LoggerID value
+Const LID =
+
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
+
+'\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
+Public LOGGERID
+Public PROGID As Long
+Public PROG_VERS=
+Public REF_TEMP
+Public BATTERY_V_CHECK = NAN
+Public BATTERY_V
+
+Units LOGGERID        = number
+Units PROGID          = number
+Units BATTERY_V       = volts

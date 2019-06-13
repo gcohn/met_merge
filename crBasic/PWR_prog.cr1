@@ -1,0 +1,48 @@
+
+    ' POWER CONTROLS
+    '##########################################################
+    'Reset telemetry counter at midnight
+    If TimeIntoInterval(0,24,Hr) Then
+      RADIO_INTVL_count = 0
+      RADIO_INTVL = RADIO_INTVL_pblc*60
+    EndIf
+    
+    If BATTERY_V > BATT_CHRG_FULL Then
+      RADIO_INTVL_mult =  1
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_FULL  AND BATTERY_V> BATT_CHRG_LOW Then
+      RADIO_INTVL_mult = 2 
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_LOW  AND BATTERY_V> BATT_CHRG_VERY_LOW Then
+      RADIO_INTVL_mult = 3
+      RADIO_PWR = True
+    
+    ElseIf BATTERY_V <= BATT_CHRG_VERY_LOW  AND BATTERY_V> BATT_CHRG_EMPTY Then
+      'If battery is very low, the radio will only transmit at 1600 (the counter 
+      'is reset every night) 
+      RADIO_INTVL = 16*60
+      RADIO_INTVL_mult = 1
+      RADIO_INTVL_count = 0
+      RADIO_PWR = True
+    
+     ElseIf BATTERY_V <= BATT_CHRG_EMPTY
+      RADIO_PWR = False
+    EndIf
+     
+    If TimeIsBetween(RADIO_DURATION_strt,RADIO_DURATION_end,RADIO_INTVL,min) Then
+      RADIO_INTVL_count += 1
+      If RADIO_INTVL_count >= RADIO_INTVL_mult Then
+        SW12(RADIO_PWR)
+        EthernetPower(RADIO_PWR)
+        RADIO_INTVL_count = 0
+      Timer (3,Sec,2)
+      EndIf
+    Else
+      ' Turn off radio the rest of the time
+      SW12(False)
+      EthernetPower(False)
+      RADIO_TIME_SINCE_LAST = Timer(3,Sec,4)
+    EndIf
+    

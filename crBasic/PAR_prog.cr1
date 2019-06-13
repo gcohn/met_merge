@@ -1,0 +1,7 @@
+    'PAR
+    '#############################################################
+    '
+    'MEASURE PAR
+    VoltDiff (PAR,1,mV25,diff_PAR,True,0,_60Hz,coef_PAR,offset_PAR)
+    '
+    

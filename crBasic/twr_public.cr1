@@ -1,0 +1,70 @@
+'TOWER SENSORS
+'############################
+Public HMP_150(3) As Float
+Public HMP_450(3) As Float
+Public AIR(3)
+
+Public SOILT(4)
+Public WCRWC(4)
+Public WCRPA(4)
+
+Public WINDSPEED
+Public WIND_DIR
+
+Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
+Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
+
+
+Alias HMP_150(1) = AIR_150
+Alias HMP_150(2) = RH_150
+Alias HMP_150(3) = DEWPT150
+Alias HMP_450(1) = AIR_450
+Alias HMP_450(2) = RH_450
+Alias HMP_450(3) = DEWPT450
+Alias AIR(1)     = AIR_250
+Alias AIR(2)     = AIR_350
+Alias AIR(3)     = ASP_350
+
+Units AIR_150         = deg C
+Units RH_150          = percent
+Units DEWPT150        = deg C
+Units AIR_450         = deg C
+Units RH_450          = percent
+Units DEWPT450        = deg C
+Units AIR_250         = deg C
+Units AIR_350         = deg C
+Units ASP_350         = deg C
+
+
+Alias SOILT(1)   = SOILT_10
+Alias SOILT(2)   = SOILT_20
+Alias SOILT(3)   = SOILT_50
+Alias SOILT(4)   = SOILT_100
+
+Units SOILT_10        = deg C
+Units SOILT_20        = deg C
+Units SOILT_50        = deg C
+Units SOILT_100       = deg C
+
+
+Alias WCRWC(1)   = WCRWC_10
+Alias WCRWC(2)   = WCRWC_20
+Alias WCRWC(3)   = WCRWC_50
+Alias WCRWC(4)   = WCRWC_100
+Alias WCRPA(1)   = WCRPA_10
+Alias WCRPA(2)   = WCRPA_20
+Alias WCRPA(3)   = WCRPA_50
+Alias WCRPA(4)   = WCRPA_100
+
+Units WCRWC_10        = fraction
+Units WCRWC_20        = fraction
+Units WCRWC_50        = fraction
+Units WCRWC_100       = fraction
+Units WCRPA_10        = number
+Units WCRPA_20        = number
+Units WCRPA_50        = number
+Units WCRPA_100       = number
+
+
+Units AIR_150_diag    = number  '1 when sensor is present, 0 when not
+Units AIR_250_diag    = number  '1 when sensor is present, 0 when not

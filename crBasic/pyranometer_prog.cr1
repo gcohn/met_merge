@@ -1,0 +1,16 @@
+    'Pyranometer
+    '#############################################################
+    '
+    'MEASURE PYRANOMETER
+    VoltDiff (SOLAR_Wm2,1,mV25,diff_SOLAR_Wm2,True,0,_60Hz,coef_SOLAR_Wm2,offset_SOLAR_Wm2)
+    '
+    '
+    'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
+    SOLAR_Wm2_RAW = SOLAR_Wm2
+    If (SOLAR_Wm2 < 0) Then
+      SOLAR_Wm2 = 0
+    EndIf
+    '
+    'COMPUTE MEJAJOULES FOR 15 SECOND PERIOD
+    SOLARMULT = 1.5E-5
+    SOLAR_MJ = SOLAR_Wm2 * SOLARMULT

@@ -1,0 +1,10 @@
+  Timer(2,Sec,2)
+  Scan (SCAN_INTERVAL_SLOW,Sec,0,0)
+    
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
+    '
+    'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+  
+  

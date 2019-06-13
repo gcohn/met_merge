@@ -1,0 +1,11 @@
+'Shelter SENSORS
+'############################
+Public SH_PRECIP
+Public SH_TEMP
+Public TIPPING_B
+Public TOTAL_TIPS
+
+Units SH_PRECIP       = millimeter
+Units SH_TEMP         = deg c
+Units TIPPING_B       = tips
+Units TOTAL_TIPS      = tips
