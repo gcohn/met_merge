@@ -1,9 +1,0 @@
-'Table105
-'#######################################################
-DataTable(Table105,true,-1)
-  TableFile("CRD:Table105_",64,-1,0,1,Day,0,0)
-  DataInterval(0,OUTPUT_INTERVAL,Min,10)
-  Sample (1,LOGGERID,FP2)
-  Sample (1,PROGID,Long)
-  Average (1,BATTERY_V,FP2,0) 
-  Sample (1, BATTERY_V_CHECK, FP2)

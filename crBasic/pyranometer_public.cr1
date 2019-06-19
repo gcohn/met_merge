@@ -1,7 +1,0 @@
-Public SOLAR_Wm2
-Public SOLAR_MJ
-Public SOLARMULT
-
-Units SOLAR_Wm2       = w m-2
-Units SOLAR_MJ        = MJ
-Units SOLARMULT       = number

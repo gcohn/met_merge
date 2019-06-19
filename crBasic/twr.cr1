@@ -1,0 +1,170 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'############################
+'TOWER SENSORS
+Public HMP_150(3) As Float
+Public HMP_450(3) As Float
+Public AIR(3)
+
+Public SOILT(4)
+Public WCRWC(4)
+Public WCRPA(4)
+
+Public WINDSPEED
+Public WIND_DIR
+
+Public AIR_150_diag=1 '1 = sensor installed; 0=sensor removed
+Public AIR_250_diag=1 '1 = sensor installed; 0=sensor removed
+
+
+Alias HMP_150(1) = AIR_150
+Alias HMP_150(2) = RH_150
+Alias HMP_150(3) = DEWPT150
+Alias HMP_450(1) = AIR_450
+Alias HMP_450(2) = RH_450
+Alias HMP_450(3) = DEWPT450
+Alias AIR(1)     = AIR_250
+Alias AIR(2)     = AIR_350
+Alias AIR(3)     = ASP_350
+
+Units AIR_150         = deg C
+Units RH_150          = percent
+Units DEWPT150        = deg C
+Units AIR_450         = deg C
+Units RH_450          = percent
+Units DEWPT450        = deg C
+Units AIR_250         = deg C
+Units AIR_350         = deg C
+Units ASP_350         = deg C
+
+
+Alias SOILT(1)   = SOILT_10
+Alias SOILT(2)   = SOILT_20
+Alias SOILT(3)   = SOILT_50
+Alias SOILT(4)   = SOILT_100
+
+Units SOILT_10        = deg C
+Units SOILT_20        = deg C
+Units SOILT_50        = deg C
+Units SOILT_100       = deg C
+
+
+Alias WCRWC(1)   = WCRWC_10
+Alias WCRWC(2)   = WCRWC_20
+Alias WCRWC(3)   = WCRWC_50
+Alias WCRWC(4)   = WCRWC_100
+Alias WCRPA(1)   = WCRPA_10
+Alias WCRPA(2)   = WCRPA_20
+Alias WCRPA(3)   = WCRPA_50
+Alias WCRPA(4)   = WCRPA_100
+
+Units WCRWC_10        = fraction
+Units WCRWC_20        = fraction
+Units WCRWC_50        = fraction
+Units WCRWC_100       = fraction
+Units WCRPA_10        = number
+Units WCRPA_20        = number
+Units WCRPA_50        = number
+Units WCRPA_100       = number
+
+
+Units AIR_150_diag    = number  '1 when sensor is present, 0 when not
+Units AIR_250_diag    = number  '1 when sensor is present, 0 when not
+
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+Dim RH_150_RAW
+Dim RH_450_RAW
+Public ASP_SPEED
+
+
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+  Totalize(1,ASP_SPEED,Long,False)
+  Maximum(1, RH_150_RAW,FP2,False,0)
+  Maximum(1, RH_450_RAW,FP2,False,0)
+
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+  Average(1,AIR_150,FP2,0)
+  Average(1,AIR_250,FP2,0)
+  Average(1,AIR_350,FP2,0)
+  Average(1,AIR_450,FP2,0)
+  Average(1,ASP_350,FP2,0)
+  Average(1,RH_150,FP2,0)
+  Average(1,RH_450,FP2,0)
+  Average(1,DEWPT150,FP2,0)
+  Average(1,DEWPT450,FP2,0)
+  Average(4,SOILT,FP2,0)
+  Average(4,WCRWC,FP2,0)
+  Average(1,WINDSPEED,FP2,0)
+  Sample(1,WIND_DIR,FP2)
+  WindVector(1,WINDSPEED,WIND_DIR,FP2,False,0,0,0)
+  Sample(1,AIR_150_diag,FP2)
+  Sample(1,AIR_250_diag,FP2)
+  Maximum (1,AIR_150,FP2,False,False)
+  Maximum (1,AIR_250,FP2,False,False)
+  Maximum (1,AIR_350,FP2,False,False)
+  Maximum (1,ASP_350,FP2,False,False)
+  Maximum (1,AIR_450,FP2,False,False)
+  Maximum(1,DEWPT150,FP2,False,False)
+  Maximum(1,DEWPT450,FP2,False,False)
+  Minimum (1,AIR_150,FP2,False,False)
+  Minimum (1,AIR_250,FP2,False,False)
+  Minimum (1,AIR_350,FP2,False,False)
+  Minimum (1,ASP_350,FP2,False,False)
+  Minimum (1,AIR_450,FP2,False,False)
+  Minimum(1,DEWPT150,FP2,False,False)
+  Minimum(1,DEWPT450,FP2,False,False)
+  Maximum (1,WINDSPEED,FP2,False,False)
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+    'TOWER SENSORS
+    '#############################################################
+    'MEASURE 1.5M & 4.5M HMP45C'S   
+    Delay(0,150,mSec)
+    VoltDiff(AIR_150,1,mv1000,diff_AIR_150,0,0,_60Hz,coef_AIR_150,offset_AIR_150)
+    VoltDiff(RH_150,1,mv1000,diff_RH_150,0,0,_60Hz,coef_RH_150,offset_RH_150)
+    VoltDiff(AIR_450,1,mv1000,diff_AIR_450,0,0,_60Hz,coef_AIR_450,offset_AIR_150)
+    VoltDiff(RH_450,1,mv1000,diff_RH_450,0,0,_60Hz,coef_RH_450, offset_RH_450)
+    '
+    'MEASURE 4 SOIL TEMPS
+    Therm107(SOILT,4,se_SOILT,vx_SOILT,0,_60Hz,1,0)
+    '
+    'MEASURE FOUR WATER CONTENT REFLECTOMETERS
+    PortSet(com_WCRPA,1)
+    PeriodAvg(WCRPA,4,mV1000,13,0,0,10,50,coef_WCRPA,0)
+    PortSet(com_WCRPA,0)
+    '
+    'MEASURE WIND DIRECTION
+    BrHalf(WIND_DIR,1,mv5000,se_WIND_DIR,vx_WIND_DIR,1,5000,True,0,_60Hz,355,0)
+    '
+    'MEASURE 2.5M AIR TEMP
+    Therm107(AIR_250,1,se_AIR_250,vx_AIR_250,0,_60Hz,1,0)
+    '
+    'MEASURE 3.5M AIR TEMP
+    Therm107(AIR_350,1,se_AIR_350,vx_AIR_350,0,_60Hz,1,0)
+    '
+    'MEASURE 3.5M ASPIRATED AIR TEMP
+    Therm107(ASP_350,1,se_ASP_350,vx_ASP_350,0,_60Hz,1,0)
+    '
+	
+    'PART2: PROCESS DATA
+    '
+    'SET RH TO 100% IF GREATER THAN 100%
+    RH_150_RAW = RH_150
+    If RH_150>100 AND RH_150<108 Then RH_150=100
+    RH_450_RAW =  RH_450
+    If RH_450>100 AND RH_450<108 Then RH_450=100
+    '
+    'COMPUTE 1.5M & 4.5M DEWPOINT
+    DewPoint(DEWPT150,AIR_150,RH_150)
+    DewPoint(DEWPT450,AIR_450,RH_450)
+    '
+    'CONVERT WCR PERIOD TO WATER CONTENT
+    WCRWC_10=-0.187+0.037*WCRPA_10+0.335*WCRPA_10^2+0*WCRPA_10^3+0*WCRPA_10^4+0*WCRPA_10^5
+    WCRWC_20=-0.187+0.037*WCRPA_20+0.335*WCRPA_20^2+0*WCRPA_20^3+0*WCRPA_20^4+0*WCRPA_20^5
+    WCRWC_50=-0.187+0.037*WCRPA_50+0.335*WCRPA_50^2+0*WCRPA_50^3+0*WCRPA_50^4+0*WCRPA_50^5
+    WCRWC_100=-0.187+0.037*WCRPA_100+0.335*WCRPA_100^2+0*WCRPA_100^3+0*WCRPA_100^4+0*WCRPA_100^5
+    '
+    'CORRECT WIND DIRECTION MEASUREMENT
+    If WIND_DIR>360 Then WIND_DIR=0
+    If WIND_DIR<0 Then WIND_DIR=0
+'^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^

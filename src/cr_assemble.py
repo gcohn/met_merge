@@ -19,55 +19,107 @@ class BuildProg:
         self.prog_vers = "0.0"
         self.met_config = {}
 
-        self._read_crBasic(crpath)
+        self.load_crBasic(crpath)
         self._read_met_config(f_config)
 
         self.comp_ordered = ['snow', 'twr', 'shlt', 'PAR', 'pyranometer', 'net radiometer', 'sonic', 'SA', 'PWR']
 
-    def _read_crBasic(self, f_path):
-        '''
-        Read in all .CR# files. Each row is read in as a single string and all rows are concatenated into a list.
-         Each files is read into a dictionary using the file name as dictionary keys.
+    def load_crBasic(self, crpath):
+        """
+        Load all crBasic files into a dictionary, keyed by file name. Then sort crBasic code into components. Splits
+        strings into a list of rows, and sorts into dictionary by program parts:
+
+            * header
+            * public declared variables
+            * SYStem function/inspection declared variables
+            * SYStem function table output
+            * table 105 output
+            * program
+            * footer
+
+        Each crBasic file must have each component and separate them (see _find_prog_split):
+
+            * 0 or 1 new lines (\n)
+            * 1 or more line comments (multiple languages: `,#,%,*,\, or --)
+            * 2 or more ^
+            * 1 or more words (spaces or special characters accepted)
+            * 1 or more ^
+            * new line (\n)
 
         ..Example::
-            SA_pulic.cr1 and SA_tbl.cr1
+            `#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+
+        :param crpath:
+        :return:
+        """
+        file_dict = self._read_crBasic(crpath)
+        prog_dict = self._sort_crBasic_dict(file_dict)
+
+        self.crBasic = prog_dict
+
+    def _read_crBasic(self, f_path):
+        """
+        Read in all .CR# files. Each file is read in as a single string. Each files is read into a dictionary using the
+        file name as dictionary keys.
+
+        ..Example::
+            SA.cr1 and snow.cr1
 
             are read into
 
-            {puclic:{SA:[]}, tbl:{SA:[]}}
+            {{SA:[]}, {snow:[]}}
         :param f_path: a directory name
-        :return: dictionary is assigned to class object
-        '''
+        :return: dictionary where key is file path and value is single string of file content
+        """
+
         f_names = listdir(f_path)
         files = {}
 
         for cr in f_names:
-            f = open(f_path + cr, 'r')
-            filetext = f.read()
-            f.close()
-            files[cr] = filetext
+            with open(f_path + cr, 'r') as f:
+                filetext = f.read()
+                cr_no_ext = cr.split('.')[0]
+                files[cr_no_ext] = filetext
 
-        programs = {'public': {'SYS': {}},
+        return files
+
+    def _sort_crBasic_dict(self, file_dict):
+        """
+        Loops through dictionary files loaded as single strings (see: _read_crBasic). Splits strings into a list of
+        rows, and sorts into dictionary by program parts:
+
+        :param file_dict: a dictionary of files
+        :return: dictionary of program components
+        """
+
+        programs = {'header': {},
+                    'public': {'SYS': {}},
                     'tbl': {'SYS': {}, '105': {}},
-                    'header': {},
                     'prog': {},
                     'footer': {}}
 
-        for k, v in files.iteritems():
-            keys = k.split('.')[0].split('_')
-            val = v.split('\n')
-            if size(keys) is 2:
-                programs[keys[1]].update({keys[0]: val})
-            elif size(keys) is 3:
-                if keys[2] == 'SYS':
-                    decl = self.get_SYS_declarations(v)
-                    out = self.get_SYS_tbl_cols(v)
-                    programs['public']['SYS'].update({keys[0]: decl})
-                    programs['tbl']['SYS'].update({keys[0]: out})
-                else:
-                    programs[keys[1]][keys[2]].update({keys[0]: val})
+        # programs must follow a strict order and must have all sections, even if they are empty
+        prog_order = ['header', 'public', {'public': 'SYS'}, {'tbl': 'SYS'}, {'tbl': '105'}, 'prog', 'footer']
 
-        self.crBasic = programs
+        for file_name, prog in file_dict.iteritems():
+            split_loc = self._find_prog_split(prog)
+
+            loc = 1
+            for part in prog_order:
+                start = split_loc[loc]
+                end = split_loc[loc+1]
+                loc += 2
+                if start == end:
+                    continue
+
+                prog_lines = prog[start:end].split('\n')
+                if type(part) is dict:
+                        key, sub_key = part.items()[0]
+                        programs[key][sub_key].update({file_name: prog_lines})
+                elif type(part) is str:
+                    programs[part].update({file_name: prog_lines})
+
+        return programs
 
     def _read_met_config(self, file_n='./met.config'):
         """
@@ -93,84 +145,36 @@ class BuildProg:
 
         return new_dict
 
-    def _find_SYS_split(self, prog_str):
+    def _find_prog_split(self, prog_str):
         """
-        Index the split between variable declarations and table outputs from a CRBasic program for SYS.
-
-        For derived measurements or measurements with multiple factors, intermediate variables are output to a SYS or
-        system table. This usually requires the declaration of the intermediate variable, as well as the output of that
-        variable into the SYS table. This function indexes the split between declarations and table outputs.
+        Index the split between program sections of a CRBasic program.
 
         ..Example::
-            pyranometer_tbl_SYS.cr1
+            pyranometer.cr1
 
+
+            `#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
             Dim SOLAR_Wm2_RAW
-            '------------/\Declare_Variable/\---------\/Table_Output\/--------------------
-                Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
 
-            _find_SYS_split returns: (18,96)
+            `#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+              Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
+              Average (1,SOLAR_Wm2,FP2,0)
+              Maximum (1,SOLAR_Wm2,FP2,False,0)
 
+            `#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+
+            _find_prog_split returns: [0, 61, 61, 161, 332, 420, 438, 514, 620, 683, 749, 811]
 
         :param prog_str:
-        :return:
+        :return: list of indexes of start and end of each break
         """
-        r = re.search("'-----[^\n]*/\\-*\\/*", prog_str)
+        breaks_iter = re.finditer("\n?['#%*\\--]{1,10}?\^{2,10}?.+\^+\n?", prog_str, flags=(re.IGNORECASE & re.MULTILINE))
 
-        if r is not None:
-            return r.span()
-        else:
-            return (0, 0)
+        breaks = []
+        for b in breaks_iter:
+            breaks += b.span()
 
-    def get_SYS_declarations(self, prog_str):
-        """
-        Extract declarations of intermediate variables from a CRBasic file.
-
-        For derived measurements or measurements with multiple factors, intermediate variables are output to a SYS or
-        system table. This usually requires the declaration of the intermediate variable, as well as the output of that
-        variable into the SYS table. This function extracts the declaration of intermediate variables.
-
-        ..Example::
-            pyranometer_tbl_SYS.cr1
-
-            Dim SOLAR_Wm2_RAW
-            '------------/\Declare_Variable/\---------\/Table_Output\/--------------------
-                Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
-
-            get_SYS_declarations returns: 'Dim SOLAR_Wm2_RAW'
-
-        :param prog_str:
-        :return:
-        """
-        i, _ = self._find_SYS_split(prog_str)
-        decl = prog_str[:i].split('\n')
-
-        return decl
-
-    def get_SYS_tbl_cols(self, prog_str):
-        """
-        Extract calls for variables to output to a table from a CRBasic file.
-
-        For derived measurements or measurements with multiple factors, intermediate variables are output to a SYS or
-        system table. This usually requires the declaration of the intermediate variable, as well as the output of that
-        variable into the SYS table. This function extracts the program call to write variables to the SYS table.
-
-        ..Example::
-            pyranometer_tbl_SYS.cr1
-
-            Dim SOLAR_Wm2_RAW
-            '------------/\Declare_Variable/\---------\/Table_Output\/--------------------
-                Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
-
-            get_SYS_tbl_cols returns: '     Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)'
-
-        :param prog_str:
-        :return:
-        """
-        _, i = self._find_SYS_split(prog_str)
-        i += 1
-        tbl = prog_str[i:].split('\n')
-
-        return tbl
+        return breaks + [prog_str.__len__()]
 
     def get_prog_file_name(self, lid):
         """
@@ -329,6 +333,7 @@ class BuildProg:
         """
         # System parameters include both declaration of special variables, and a table output that changes depending on
         # which sensors and components are present
+
         sys = self._format_sys_decl(lid) + self._format_sys_tbl(lid)
 
         '''
@@ -406,7 +411,8 @@ class BuildProg:
         pblc = []
 
         # program header, comments, and universal Pulic variables: e.g. LID, BatteryVoltage
-        pblc.extend(cr['header'].values()[0])
+        pblc.extend(cr['header']['met'])
+        pblc.extend(cr['public']['met'])
 
         # loop through components. Use a list with a preset order instead of looping through comp list, .
         for c in ordered:
@@ -448,7 +454,7 @@ class BuildProg:
         ordered = self.comp_ordered
 
         # place main program header
-        prog = ["'\\\\\\\\\\\\\\\\\\\\\\\\\\\ MAIN PROGRAM ////////////////////////////\nBeginProg\n"]
+        prog = []
         prog.extend(cr['prog']['met'])
 
         # loop through components. Use a list with a preset order instead of looping through comp list, .
@@ -491,14 +497,17 @@ class BuildProg:
 
         # Assemble file: declare variables, table output, and write program
         if comp.count('SA'):
-            sa = cr['tbl']['SA']
+            sa = cr['public']['SYS']['SA'] + cr['tbl']['SYS']['SA']
         else:
             sa = []
 
+        pwr = cr['public']['SYS']['PWR'] + cr['tbl']['SYS']['PWR']
+
         #######################
-        cr_file = header + self.format_pblc_var(lid) + sa + cr['tbl']['PWR'] + self.format_sys(lid) + \
+        cr_file = header + self.format_pblc_var(lid) + sa + pwr + self.format_sys(lid) + \
                   self.format_tbl_105(lid) + self.format_prog(lid)
         #######################
+
         # convert list to string
         cr_text = "\n".join(cr_file)
         # insert check values

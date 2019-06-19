@@ -1,3 +1,0 @@
-Dim SOLAR_Wm2_RAW
-'------------/\Declare_Variable/\---------\/Table_Output\/--------------------
-  Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)

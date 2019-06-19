@@ -1,9 +1,0 @@
-Dim RH_150_RAW
-Dim RH_450_RAW
-Public ASP_SPEED
-'------------/\Declare_Variable/\---------\/Table_Output\/--------------------
-  Totalize(1,ASP_SPEED,Long,False)
-  Maximum(1, RH_150_RAW,FP2,False,0)
-  Maximum(1, RH_450_RAW,FP2,False,0)
-
-

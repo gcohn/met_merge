@@ -1,0 +1,39 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'Pyranometer
+'#################
+Public SOLAR_Wm2
+Public SOLAR_MJ
+Public SOLARMULT
+
+Units SOLAR_Wm2       = w m-2
+Units SOLAR_MJ        = MJ
+Units SOLARMULT       = number
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+Dim SOLAR_Wm2_RAW
+
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+  Minimum(1, SOLAR_Wm2_RAW,FP2,False,0)
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+  Average (1,SOLAR_Wm2,FP2,0)
+  Maximum (1,SOLAR_Wm2,FP2,False,0)
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+    'Pyranometer
+    '######################
+    '
+    'MEASURE PYRANOMETER
+    VoltDiff (SOLAR_Wm2,1,mV25,diff_SOLAR_Wm2,True,0,_60Hz,coef_SOLAR_Wm2,offset_SOLAR_Wm2)
+    '
+    '
+    'SET SOLAR RADIATION TO ZERO IF LESS THAN ZERO
+    SOLAR_Wm2_RAW = SOLAR_Wm2
+    If (SOLAR_Wm2 < 0) Then
+      SOLAR_Wm2 = 0
+    EndIf
+    '
+    'COMPUTE MEJAJOULES FOR 15 SECOND PERIOD
+    SOLARMULT = 1.5E-5
+    SOLAR_MJ = SOLAR_Wm2 ^ SOLARMULT
+
+'#%^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^
