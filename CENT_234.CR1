@@ -28,6 +28,8 @@
   ' addes SW12V control to radio/power controls
 ' Version 6.2 Created October 2017 by GC
   ' edited SW12V control to radio/power controls
+' Version 6.3 Created November 2019 by GC
+  ' declared pump controls as boolean variables to fix lock out.
   
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
@@ -40,7 +42,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=6.2
+Public PROG_VERS=6.3
 Public REF_TEMP
 Public BATTERY_V_CHECK
 Public BATTERY_V
@@ -148,16 +150,16 @@ Public SA_OFF_TIME
 Public CON_TEMP = 4
 Public CON_TIME_OFF = 900
 Public CON_TIME_ON = 1209600
-Public CON_TIME
-Public CON_PUMP
-Public PUMP_ON
+Public CON_TIME As Boolean
+Public CON_PUMP As Boolean
+Public PUMP_ON 
 
 Units SA_RUN_TIME = seconds
 Units SA_OFF_TIME = seconds
 Units CON_TIME_OFF = seconds
 Units CON_TIME_ON = seconds
 
-Dim LogNow = false
+Dim LogNow As Boolean
 
 'CONTROL TALBE- Status of pump program controls 
 DataTable(CONT,LogNow=true,1200)
