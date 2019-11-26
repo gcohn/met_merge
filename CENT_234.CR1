@@ -26,7 +26,9 @@
   ' Standardazed public table display for easier reading of program and keypad.
 ' Version 6.1 Created October 2017 by GC
   ' addes SW12V control to radio/power controls
-
+' Version 6.2 Created October 2017 by GC
+  ' edited SW12V control to radio/power controls
+  
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
 'Declare Constant Variable
@@ -38,7 +40,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=6.1
+Public PROG_VERS=6.2
 Public REF_TEMP
 Public BATTERY_V_CHECK
 Public BATTERY_V
@@ -406,6 +408,7 @@ BeginProg
     Else
       ' Turn off radio the rest of the time
       EthernetPower(False)
+      SW12(False)
       RADIO_TIME_SINCE_LAST = Timer(3,Sec,4)
     EndIf
 	   
