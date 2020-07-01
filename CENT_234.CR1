@@ -29,7 +29,7 @@
 ' Version 6.2 Created October 2017 by GC
   ' edited SW12V control to radio/power controls
 ' Version 6.3 Created November 2019 by GC
-  ' declared pump controls as boolean variables to fix lock out.
+  ' declared pump controls as boolean variables to fix glitch.
   
 'PROGRAM VARIABLES
 '////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ PreserveVariables
 'Declare Public Variables
 Public LOGGERID
 Public PROGID As Long
-Public PROG_VERS=6.3
+Public PROG_VERS=6.31
 Public REF_TEMP
 Public BATTERY_V_CHECK
 Public BATTERY_V
@@ -254,6 +254,7 @@ EndTable
 'Main Program
 '///////////////////////////////////////////////////////////////
 BeginProg  
+  LogNow  = false 
   Timer(2,Sec,2)
   Scan (15,Sec,0,0)    
     'PUMP CONTROL
