@@ -1,0 +1,103 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'SONIC ANEMOMETER
+'############################
+Public sncstring As String * 60
+Public sncstring_bytes
+Public snc(5)
+Public stat_flag
+Public Vh
+Public diag_flag
+Public nan_flag
+Public strtosend
+
+Alias snc(1)     = Ux         'positive for S--N
+Alias snc(2)     = Uy         'positive for E--W
+Alias snc(3)     = unit As String * 1
+Alias snc(4)     = Ts         'in deg C
+Alias snc(5)     = diag
+
+Units WINDSPEED       = m s-1
+Units WIND_DIR        = degrees
+Units Ux              = [m s-1]
+Units Uy              = [m s-1]
+Units Ts              = [deg C]
+Units diag            = [1]
+Units Vh              = [m s-1]
+
+Dim n                 = 1
+
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+  Totalize (1,n,FP2,False)  'START OF SNOIC OUTPUT
+  FieldNames ("N_samples")
+  Totalize (1,n,FP2,diag<>0)
+  FieldNames ("N_samples_good")
+  Maximum (1,diag,FP2,diag_flag,false)
+  Minimum (1,sncstring_bytes,FP2,False,False)
+  Average (2,snc(1),FP2,stat_flag)
+  Average (1,snc(4),FP2,stat_flag)
+  StdDev (2,snc(1),FP2,stat_flag)
+  StdDev (1,snc(4),FP2,stat_flag)
+  WindVector (1,Uy,-Ux,FP2,stat_flag,SCAN_INTERVAL*60*OUTPUT_INTERVAL/6,1,0)
+  FieldNames ("SPD_mean,DIR_mean,DIR_std") ' field names for sonic data
+  Maximum (1,Vh,FP2,stat_flag,False)
+  FieldNames ("SPD_Gust_max")
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+  'SONIC WIND SENSOR
+  '#############################################################
+  '
+  'MEASURE GILL WINDOBSERVER II SONIC ANAMOMETER
+  'SW12 (1,0)
+  Delay (1,5,Sec)
+  'SW12 (1,1)
+  SerialOpen (Com1,9600,16,0,100)
+  SerialFlush(Com1)
+  Delay (1,5,Sec)
+  nan_flag = 0
+  Scan (SCAN_INTERVAL_FAST,Sec,0,0)
+    SerialInRecord (Com1,sncstring,0,0,0,sncstring_bytes,01)
+    Delay (1,10,mSec)
+    SplitStr (snc(1),sncstring,",",5,4)
+    SerialFlush (Com1)
+    If diag = NaN Then
+      diag_flag = 1
+      stat_flag = 1
+      nan_flag = nan_flag + 1
+    ElseIf diag <> 0
+      diag_flag = 0
+      stat_flag = 1
+    ElseIf Ux = NaN OR Uy = NaN OR Ts = NaN
+      diag_flag = 0
+      stat_flag = 1
+      nan_flag = nan_flag + 1
+    Else
+      diag_flag = 0
+      stat_flag = 0
+      nan_flag = 0
+    EndIf
+    Vh  =  SQR(Ux^2+Uy^2)
+    If nan_flag > 1 Then
+      'SW12 (1,0)
+      Delay (1,5,Sec)
+      'SW12 (1,1)
+      SerialClose (Com1)
+      Delay (1,5,Sec)
+      SerialOpen (Com1,9600,16,0,100)
+      SerialFlush (Com1)
+      nan_flag = 0
+    EndIf
+    '
+    'MEASURE WIND SPEED
+    PulseCount(WINDSPEED,1,pchan_WINDSPEED,1,1,coef_WINDSPEED,offset_WINDSPEED)
+    'MEASURE ASPIRATED FAN SPEED PER MINUTE
+    coef_ASP_SPEED = 1/(15/60)
+    PulseCount(ASP_SPEED,1,pchan_ASP_SPEED,0,0,coef_ASP_SPEED,offset_ASP_SPEED)
+    
+  NextScan
+
+  SlowSequence
+'#%^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^

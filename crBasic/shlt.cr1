@@ -1,0 +1,38 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'Shelter SENSORS
+'############################
+Public SH_PRECIP
+Public SH_TEMP
+Public TIPPING_B
+Public TOTAL_TIPS
+
+Units SH_PRECIP       = millimeter
+Units SH_TEMP         = deg c
+Units TIPPING_B       = tips
+Units TOTAL_TIPS      = tips
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+  Sample (1,SH_PRECIP,FP2)
+  Average (1,SH_TEMP,FP2,0)
+  Totalize (1,TIPPING_B,FP2,0)
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+    'SHELTER SENSORS
+    '#############################################################
+    'MEASURE SHELTER RAIN GAGE FLOAT
+    VoltDiff (SH_PRECIP,1,mV250,diff_SH_PRECIP,True,0,_60Hz,coef_SH_PRECIP,offset_SH_PRECIP)
+    '
+    'MEASURE SHELTER RAINGAGE ORIFICE TEMP
+    Therm107 (SH_TEMP,1,se_SH_TEMP,vx_SH_TEMP,0,_60Hz,1.0,0)
+    '
+    '
+    'MEASURE TIPPING BUCKET LYSIMETER
+    PulseCount (TIPPING_B,1,pchan_TIPPING_B,2,0,1.0,0)
+    '
+    'COMPUTE TOTAL TIPS
+    TOTAL_TIPS = TOTAL_TIPS + TIPPING_B
+    '
+
+'#%^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^

@@ -1,0 +1,82 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'Program template: Benchmark Met Station
+'Author: Greg Cohn
+'Created: 5/3/2017
+'Legacy Development: John Moreau, Adam Kennedy
+'v0.1: Beta testing and development of composite program
+
+Const SCAN_INTERVAL_FAST = 1   'Scan interval in Sec for sonic
+Const SCAN_INTERVAL_SLOW = 15  'Scan interval in Sec for rest of program
+Const OUTPUT_INTERVAL    = 5   'Output interval in minutes
+' Set LoggerID value
+Const LID =
+
+'Call PreserveVariables so variables will reflect last known value if the data logger experiences a power loss. 
+PreserveVariables
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'\\\\\\\\\\\\\\\\\\\\\\\\\ DECLARATIONS /////////////////////////
+Public LOGGERID
+Public PROGID As Long
+Public PROG_VERS=
+Public REF_TEMP
+Public BATTERY_V_CHECK = NAN
+Public BATTERY_V
+
+Units LOGGERID        = number
+Units PROGID          = number
+Units BATTERY_V       = volts
+
+Dim LogNow as Boolean
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+DataTable(SYS,true,-1)
+  TableFile("CRD:SYS_",64,-1,0,1,Day,0,0)
+  DataInterval(0,OUTPUT_INTERVAL,min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+'Table105
+'#######################################################
+DataTable(Table105,true,-1)
+  TableFile("CRD:Table105_",64,-1,0,1,Day,0,0)
+  DataInterval(0,OUTPUT_INTERVAL,Min,10)
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Average (1,BATTERY_V,FP2,0) 
+  Sample (1, BATTERY_V_CHECK, FP2)
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+'\\\\\\\\\\\\\\ MAIN PROGRAM ////////////////////////////
+BeginProg
+  LogNow = false
+  Timer(2,Sec,2)
+  Scan (SCAN_INTERVAL_SLOW,Sec,0,0)
+    
+    'MEASURE PANEL TEMP
+    PanelTemp(REF_TEMP,_60Hz)
+    '
+    'MEASURE BATTERY VOLTAGE
+    Battery(BATTERY_V)
+  
+'#%^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^
+    If TimeIntoInterval(0,OUTPUT_INTERVAL,Min)
+      BATTERY_V_CHECK = NAN
+    EndIf
+    
+    'SET LOGGERID TO
+    LOGGERID = LID
+    '
+    'RECORD THE SIGNATURE AS PROGID
+    If TimeIntoInterval(0,1,Min) Then
+      PROGID=Status.ProgSignature(1,1)
+    EndIf
+    '
+    '5 MINUTE OUTPUT
+    CallTable Table105
+    CallTable SYS
+    CallTable PWR
+  NextScan
+EndProg

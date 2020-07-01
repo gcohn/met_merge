@@ -1,0 +1,101 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'STAND ALONE (SA) SENSORS
+'############################
+Public PUMPVOLTS_CHECK = NAN
+Public PUMPVOLTS
+Public SA_PRECIP
+Public SA_TEMP
+
+Units SA_PRECIP       = millimeter
+Units SA_TEMP         = deg c
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+'SA CONTROL PARAMETERS
+'******************************************
+'CONT Table variables
+Public SA_RUN_TIME
+Public SA_OFF_TIME
+Public CON_TEMP     = 4
+Public CON_TIME_OFF = 900
+Public CON_TIME_ON  = 1209600
+Public CON_TIME As Boolean
+Public CON_PUMP As Boolean
+Public PUMP_ON
+
+Units SA_RUN_TIME  = seconds
+Units SA_OFF_TIME  = seconds
+Units CON_TIME_OFF = seconds
+Units CON_TIME_ON  = seconds
+Units CON_TEMP      = deg c
+
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+'CONTROL TALBE- Status of pump program controls 
+DataTable(CONT,LogNow=true,1200)
+  TableFile("CRD:CONT_",64,-1,0,1,Day,0,0) 
+  Sample (1,LOGGERID,FP2)
+  Sample (1,PROGID,Long)
+  Sample (1,PROG_VERS,FP2)
+  Sample (1,SA_TEMP,FP2)
+  Sample (1,CON_TEMP,FP2)
+  Sample (1,PUMP_ON,Boolean)
+  Sample (1,CON_PUMP,Boolean)
+  Sample (1,CON_TIME,Boolean)
+  Sample (1,SA_RUN_TIME,Long)
+  Sample (1,SA_OFF_TIME,Long)
+  Sample (1,CON_TIME_ON,Long)
+  Sample (1,CON_TIME_OFF,Long)
+EndTable
+
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+  Sample (1,SA_PRECIP,FP2)
+  Average (1,SA_TEMP,FP2,0)
+  Average (1,PUMPVOLTS,FP2,0)
+  Sample (1, PUMPVOLTS_CHECK, FP2)
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+    'STAND ALONE SENSORS
+    '#############################################################
+    'MEASURE STAND ALONE RAIN GAGE FLOAT
+    VoltDiff (SA_PRECIP,1,mV250,3,True,0,_60Hz,coef_SA_PRECIP,offset_SA_PRECIP)
+    
+    'MEASURE STAND ALONE RAINGAGE ORIFICE TEMP
+    Therm107 (SA_TEMP,1,se_SA_TEMP,vx_SA_TEMP,0,_60Hz,1.0,0)
+     
+    'PUMP CONTROL
+    '#############################################################
+    ' CHECK ORIFIC TEMPERATURE 
+    ' pump on at low temp
+    LogNow = false
+    If (SA_TEMP < CON_TEMP) Then                      
+      CON_PUMP = true
+    EndIf
+    ' pump off at high temp
+    If (CON_TEMP+1 <= SA_TEMP) Then
+      CON_PUMP = false
+    EndIf
+    'CHECK TIME
+    SA_OFF_TIME = Timer(2,sec,4)
+    If (SA_OFF_TIME > CON_TIME_ON) Then
+      CON_TIME = false
+    EndIf
+    SA_RUN_TIME = Timer(1,Sec,4)
+    If (SA_RUN_TIME > CON_TIME_OFF OR CON_TIME = true) Then
+      CON_PUMP = false
+      CON_TIME = true
+    EndIf
+    ' Take action
+    PortGet(PUMP_ON,8)
+    If (CON_PUMP = true AND PUMP_ON = 0 ) Then      
+      LogNow = true
+      PortSet(com_SA_PUMP,1)
+      Timer(1,Sec,2)
+      Timer(2,Sec,3)
+    EndIf
+    If (CON_PUMP = false AND PUMP_ON = 1) Then
+      LogNow = true
+      PortSet(com_SA_PUMP,0)
+      Timer(1,Sec,3)
+      Timer(2,Sec,2)     
+    EndIf
+
+'#%^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^

@@ -1,0 +1,74 @@
+'#%^^^^^^^^^^^^^^^^^Begin Header: indent 0^^^^^^^^^^^^^^^^^
+'#%^^^^^^^^^^^^^^^^^Begin Declare Variables (Public/Const/Dim) and Units: Indent 0^^^^^^^^^^^^^^^^^
+'SNOW SENSORS
+'############################
+Public SR50(2)
+Public TEMP_CORR_DISTANCE
+Public SNOW_INITIAL_DISTANCE =
+Public AIR_TEMP
+Public SNOWDEPTH_CHECK
+Public SNOWDEPTH
+Public SWE_CHECK
+Public SWE
+Public SNOW_TARE
+'1 = snow present; 0=snow absent
+Public SNOW_diag=1 
+
+'Alias
+Alias SR50(1)= SNOW_RAW_DIST
+Alias SR50(2)= QUALITY
+
+Units SWE           = millimeter
+Units SNOW_TARE     = number
+Units SNOWDEPTH     = meter
+
+'#%^^^^^^^^^^^^^^^^^Begin Declare SYStem Function Variables: Indent 0^^^^^^^^^^^^^^^^^
+Dim SNOW_DIST_CORRECTION
+Dim SNOW_AIR_TEMP
+Dim SWE_RAW
+
+'#%^^^^^^^^^^^^^^^^^Begin SYStem Function table: Indent 2^^^^^^^^^^^^^^^^^
+  Sample(1,SNOW_INITIAL_DISTANCE,FP2)
+  Sample(1,SNOW_RAW_DIST,FP2)
+  Sample(1,SNOW_DIST_CORRECTION,FP2)
+  Sample(1,TEMP_CORR_DISTANCE,FP2)  
+  Sample(1,SNOW_AIR_TEMP,FP2)
+  Sample(1,SWE_RAW,FP2)
+  Sample(1,SNOW_TARE,FP2)
+'#%^^^^^^^^^^^^^^^^^Begin Table 105: Indent2^^^^^^^^^^^^^^^^^
+  Sample (1,SWE,FP2)
+  Sample (1, SWE_CHECK, FP2)
+  Sample (1,SNOWDEPTH,FP2)
+  Sample (1, SNOWDEPTH_CHECK, FP2)
+  Sample (1,QUALITY,FP2)
+'#%^^^^^^^^^^^^^^^^^Begin Program: Indent 4^^^^^^^^^^^^^^^^^
+    'SNOW SENSORS
+    '#############################################################
+    '
+    'MEASURE AIR TEMP
+    Therm107 (AIR_TEMP,1,se_AIR_TEMP,vx_AIR_TEMP,0,_60Hz,1.0,0)
+    '
+    'MEASURE SNOW PILLOW
+    BrFull (SWE,1,mV25,diff_SWE,vx_SWE,1,1524,True,True,0,_60Hz,coef_SWE, offset_SWE)
+    '    
+    'MEASURE SR50A SNOW DEPTH SENSOR
+    If  TimeIntoInterval(0,300,Sec) Then   
+        SDI12Recorder (SR50(),com_SNOW_RAW_DIST,0,"M1!",1.0,0)
+        SNOW_AIR_TEMP = AIR_TEMP
+        SNOW_DIST_CORRECTION=(SQR((SNOW_AIR_TEMP+273.15)/273.15))
+    EndIf
+    '
+    '
+    'CORRECT SNOW DEPTH MEASUREMENT
+    TEMP_CORR_DISTANCE=SNOW_RAW_DIST*SNOW_DIST_CORRECTION
+    SNOWDEPTH=SNOW_INITIAL_DISTANCE-TEMP_CORR_DISTANCE
+    '
+    'CHANGE SNOW PILLOW OUTPUT FROM PSIG TO mm H2O
+    SWE_RAW = SWE
+    SWE = SWE * coef_SWE
+    '
+    'SUBTRACT TARE FOR SNOW PILLOW
+    SWE = SWE - SNOW_TARE
+    '
+    
+'#%^^^^^^^^^^^^^^^^^Begin Footer^^^^^^^^^^^^^^^^^
